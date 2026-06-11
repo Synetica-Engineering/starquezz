@@ -1,0 +1,154 @@
+/* directions2.css — three more StarqueZZ hi-fi directions, all high-contrast.
+   D · Papercraft (.dir-pc)  E · Sketchbook (.dir-sk)  F · Aurora (.dir-au)
+   Relies on the shared base structure rules in directions.css. */
+
+/* shared generic helpers for the factory-built screens */
+.scr .num{font-family:var(--disp); font-weight:700; color:var(--ink);}
+.scr .pledge b{color:var(--ink);}
+.scr .pledge .date{color:var(--accent); font-weight:800;}
+.scr .galaxy-foot .glabel{font-family:var(--disp); font-weight:700; color:var(--accent);}
+.scr .progress-line .of{color:var(--muted);}
+
+/* ============================================================= */
+/* D · PAPERCRAFT — cut-paper collage, bold outlines              */
+/* ============================================================= */
+.dir-pc{
+  --ink:#2C2A33; --muted:#7C7568; --accent:#E5533B; --starc:#F2A93B;
+  --line:#2C2A33; --disp:'Lilita One'; --body:'Nunito Sans';
+}
+.dir-pc.scr{
+  background:
+    radial-gradient(circle at 16% 10%, #F7EFE0 0, transparent 44%),
+    radial-gradient(circle at 86% 84%, #EFE4CF 0, transparent 46%),
+    #F1E8D7;
+}
+.dir-pc.scr::before{
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.6;
+  background-image:radial-gradient(rgba(90,75,50,.06) 1px, transparent 1.5px);
+  background-size:6px 6px;
+}
+.dir-pc .statusbar{color:#5A5346;}
+.dir-pc .greet .hi{color:#7C7568;}
+.dir-pc .greet .nm{color:#2C2A33;}
+.dir-pc .topbar .avatar{box-shadow:0 0 0 2px #fff, 0 0 0 4px #2C2A33;}
+.dir-pc .pill{background:#fff; color:#2C2A33; border:2.5px solid #2C2A33; box-shadow:3px 3px 0 rgba(44,42,51,.18);}
+.dir-pc .pill.flame{color:#E5533B;}
+.dir-pc .blockbar .bname{color:#2C2A33;}
+.dir-pc .blockbar .nav span{background:#F2A93B; color:#2C2A33; border:2.5px solid #2C2A33; box-shadow:2px 2px 0 #2C2A33;}
+.dir-pc .habit{background:#fff; border:2.5px solid #2C2A33; box-shadow:4px 4px 0 rgba(44,42,51,.16); border-radius:16px;}
+.dir-pc .habit .hicon{background:#FBE3C2; color:#C2461F; border:2.5px solid #2C2A33; border-radius:12px;}
+.dir-pc .habit.now{box-shadow:4px 4px 0 rgba(229,83,59,.28); border-color:#E5533B;}
+.dir-pc .habit.now .hicon{background:#F2A93B;}
+.dir-pc .habit .hcheck{border:2.5px solid #2C2A33; color:transparent;}
+.dir-pc .habit.done{background:#EFE6D5;}
+.dir-pc .habit.done .hcheck{background:#2E9B8F; color:#fff;}
+.dir-pc .habit.done .hname{color:#7C7568; text-decoration:line-through; text-decoration-color:#C7BBA2;}
+.dir-pc .habit.locked{background:#EDE4D2; border:2.5px dashed #A99B7E; box-shadow:4px 4px 0 rgba(44,42,51,.07);}
+.dir-pc .habit.locked .hicon{background:#E4D8BF; border-color:#A99B7E; color:#9A8B6C;}
+.dir-pc .lockpill{background:#E5533B; color:#fff; border:2px solid #2C2A33;}
+.dir-pc .dreamhead .eyebrow{color:#C2461F;}
+.dir-pc .dreamhead .dname{color:#2C2A33;}
+.dir-pc .constel-wrap{background:#fff; border:2.5px solid #2C2A33; border-radius:20px; box-shadow:4px 4px 0 rgba(44,42,51,.16); margin:6px 0 14px;}
+.dir-pc .progress-track{background:#E6DAC4; border:2px solid #2C2A33;}
+.dir-pc .progress-fill{background:#F2A93B;}
+.dir-pc .pledge{background:#fff; color:#52503F; border:2.5px solid #2C2A33; box-shadow:3px 3px 0 rgba(44,42,51,.14);}
+.dir-pc .galaxy-foot{background:#2E9B8F; color:#fff; border:2.5px solid #2C2A33; box-shadow:3px 3px 0 rgba(44,42,51,.18);}
+.dir-pc .galaxy-foot .glabel{color:#fff;}
+.dir-pc .galaxy-foot .gdots i{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.7);}
+
+/* ============================================================= */
+/* E · SKETCHBOOK — crayon / notebook, hand-drawn wobble          */
+/* ============================================================= */
+.dir-sk{
+  --ink:#33302B; --muted:#8A857C; --accent:#D6493B; --starc:#E8B53A;
+  --line:#33302B; --disp:'Gochi Hand'; --body:'Nunito';
+}
+.dir-sk.scr{ background:#FBF7EF; }
+.dir-sk.scr::before{
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.5;
+  background-image:radial-gradient(rgba(70,90,130,.10) 1.4px, transparent 1.6px);
+  background-size:20px 20px;
+}
+.dir-sk .statusbar{color:#6A655C;}
+.dir-sk .greet .hi{color:#8A857C;}
+.dir-sk .greet .nm{color:#33302B; font-size:24px;}
+.dir-sk .topbar .avatar{box-shadow:0 0 0 2px #fff, 0 0 0 4px #33302B;}
+.dir-sk .pill{background:#fff; color:#33302B; border:2px solid #33302B; border-radius:14px 12px 16px 11px; box-shadow:2px 3px 0 rgba(51,48,43,.13);}
+.dir-sk .pill.flame{color:#D6493B;}
+.dir-sk .blockbar .bname{color:#33302B; text-decoration:underline wavy #D6493B; text-underline-offset:5px; text-decoration-thickness:2px;}
+.dir-sk .blockbar .nav span{background:#fff; color:#8A6A2E; border:2px solid #33302B; border-radius:50% 48% 52% 50%;}
+.dir-sk .habit{background:#fff; border:2px solid #33302B; border-radius:255px 16px 225px 15px/15px 225px 16px 255px; box-shadow:2px 3px 0 rgba(51,48,43,.12);}
+.dir-sk .habit .hicon{background:#FCEFC6; color:#B8861F; border:2px solid #33302B; border-radius:60% 40% 55% 45%;}
+.dir-sk .habit.now{border-color:#D6493B; background:#FFF4F1;}
+.dir-sk .habit.now .hicon{background:#FBD7CF; color:#C53C2E;}
+.dir-sk .habit .hcheck{border:2px solid #33302B; color:transparent; border-radius:52% 48% 50% 50%;}
+.dir-sk .habit.done{background:#F3EFE3;}
+.dir-sk .habit.done .hcheck{background:#5AA15A; color:#fff;}
+.dir-sk .habit.done .hname{color:#8A857C; text-decoration:line-through; text-decoration-color:#C9C2B4;}
+.dir-sk .habit.locked{background:#F2EEE2; border:2px dashed #ABA496;}
+.dir-sk .habit.locked .hicon{background:#E8E2D3; border-color:#ABA496; color:#9A9384;}
+.dir-sk .lockpill{background:#D6493B; color:#fff; border:1.5px solid #33302B; border-radius:10px 8px 11px 8px;}
+.dir-sk .dreamhead .eyebrow{color:#B8861F;}
+.dir-sk .dreamhead .dname{color:#33302B; font-size:26px;}
+.dir-sk .constel-wrap{background:#fff; border:2px solid #33302B; border-radius:18px 20px 17px 21px; box-shadow:2px 3px 0 rgba(51,48,43,.12); margin:6px 0 14px;}
+.dir-sk .progress-track{background:#EDE7D7; border:2px solid #33302B;}
+.dir-sk .progress-fill{background:#E8B53A;}
+.dir-sk .pledge{background:#fff; color:#56524A; border:2px solid #33302B; border-radius:16px 18px 15px 19px; box-shadow:2px 3px 0 rgba(51,48,43,.11);}
+.dir-sk .galaxy-foot{background:#3F6FB5; color:#fff; border:2px solid #33302B; border-radius:15px 17px 14px 18px; box-shadow:2px 3px 0 rgba(51,48,43,.14);}
+.dir-sk .galaxy-foot .glabel{color:#fff;}
+.dir-sk .galaxy-foot .gdots i{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.7);}
+
+/* ============================================================= */
+/* F · AURORA — magical night sky, HIGH CONTRAST (the Cosmic fix) */
+/* ============================================================= */
+.dir-au{
+  --ink:#F2F8FF; --muted:#B8CBDC; --accent:#5BE5B0; --starc:#FFD66B;
+  --line:rgba(120,170,200,.45); --disp:'Quicksand'; --body:'Mulish';
+}
+.dir-au.scr{
+  background-color:#0E2738;
+  background-image:
+    radial-gradient(80% 55% at 78% 6%, rgba(91,229,176,.22) 0, transparent 60%),
+    radial-gradient(70% 50% at 18% 0%, rgba(87,200,255,.18) 0, transparent 55%),
+    radial-gradient(120% 90% at 50% -10%, #173C54 0, rgba(14,39,56,0) 70%);
+}
+.dir-au.scr::before{
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.7;
+  background-image:
+    radial-gradient(1.4px 1.4px at 22% 16%, #fff 50%, transparent),
+    radial-gradient(1.2px 1.2px at 70% 10%, #d6ecff 50%, transparent),
+    radial-gradient(1px 1px at 45% 30%, #fff 50%, transparent),
+    radial-gradient(1.3px 1.3px at 86% 44%, #cfeaff 50%, transparent),
+    radial-gradient(1px 1px at 14% 54%, #fff 50%, transparent);
+}
+.dir-au .statusbar{color:#CFE4F2;}
+.dir-au .greet .hi{color:#B8CBDC;}
+.dir-au .greet .nm{color:#fff; font-weight:700;}
+.dir-au .topbar .avatar{box-shadow:0 0 0 2px rgba(91,229,176,.5);}
+.dir-au .pill{background:#163C54; color:#FFE49C; font-weight:700; box-shadow:inset 0 0 0 1.5px rgba(255,214,107,.55);}
+.dir-au .pill.flame{color:#FFC196; box-shadow:inset 0 0 0 1.5px rgba(255,160,110,.5);}
+.dir-au .blockbar .bname{color:#fff;}
+.dir-au .blockbar .nav span{background:#163C54; color:#9FF0D0; box-shadow:inset 0 0 0 1.5px rgba(120,170,200,.4);}
+.dir-au .habit{background:#143A52; box-shadow:inset 0 0 0 1.5px rgba(120,170,200,.3), 0 6px 16px rgba(0,0,0,.28); border-radius:18px;}
+.dir-au .habit .hname{font-size:17px;}
+.dir-au .habit .hsub{color:#B8CBDC; opacity:1;}
+.dir-au .habit .hicon{background:rgba(91,229,176,.18); color:#86F2C8; border-radius:13px;}
+.dir-au .habit.now{background:#17455F; box-shadow:inset 0 0 0 2px #5BE5B0, 0 0 22px rgba(91,229,176,.3);}
+.dir-au .habit.now .hicon{background:rgba(91,229,176,.28); color:#9FF7D6;}
+.dir-au .habit .hcheck{box-shadow:inset 0 0 0 2px rgba(160,190,210,.6); color:transparent;}
+.dir-au .habit.done{background:#102E40;}
+.dir-au .habit.done .hcheck{background:#FFD66B; color:#241A03; box-shadow:0 0 14px rgba(255,214,107,.45);}
+.dir-au .habit.done .hname{color:#9DB3C6;}
+.dir-au .habit.locked{background:#102B3C; box-shadow:inset 0 0 0 1.5px rgba(120,170,200,.22); border:2px dashed rgba(150,185,210,.4);}
+.dir-au .habit.locked .hicon{background:rgba(150,185,210,.12); color:#7E97AC;}
+.dir-au .lockpill{background:#17455F; color:#9FF0D0; box-shadow:inset 0 0 0 1.5px rgba(91,229,176,.5);}
+.dir-au .dreamhead .eyebrow{color:#86F2C8;}
+.dir-au .dreamhead .dname{color:#fff;}
+.dir-au .constel-wrap{
+  background:radial-gradient(100% 80% at 50% 30%, rgba(91,229,176,.12) 0, transparent 65%), #0C2536;
+  box-shadow:inset 0 0 0 1.5px rgba(120,170,200,.3); border-radius:20px; margin:6px 0 14px;
+}
+.dir-au .progress-track{background:rgba(255,255,255,.14);}
+.dir-au .progress-fill{background:linear-gradient(90deg,#FFD66B,#5BE5B0);}
+.dir-au .pledge{background:#143A52; color:#DCEBF5; box-shadow:inset 0 0 0 1.5px rgba(120,170,200,.3);}
+.dir-au .galaxy-foot{background:#143A52; color:#DCEBF5; box-shadow:inset 0 0 0 1.5px rgba(120,170,200,.3);}

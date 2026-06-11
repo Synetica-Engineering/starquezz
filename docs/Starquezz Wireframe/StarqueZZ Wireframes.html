@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StarqueZZ — Wireframe Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2b2b2b;
+    --ink-soft:#555;
+    --line:#3a3a3a;
+    --line-soft:#9a9a9a;
+    --paper:#f4f1ea;
+    --paper-2:#ece7dc;
+    --card:#ffffff;
+    --accent:#2f6fd0;      /* blue pencil — annotations */
+    --accent-2:#d0452f;     /* red pencil — emphasis */
+    --gold:#e8a91d;         /* stars only */
+    --flame:#e8631d;        /* streak */
+    --hand:'Kalam', cursive;
+    --note:'Caveat', cursive;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      linear-gradient(rgba(0,0,0,0.025) 1px, transparent 1px);
+    background-size:100% 28px;
+    color:var(--ink);
+    font-family:var(--hand);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- top bar ---------- */
+  header.top{
+    position:sticky; top:0; z-index:50;
+    background:var(--paper-2);
+    border-bottom:2px solid var(--line);
+    padding:14px 22px 0;
+  }
+  .top-row{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;}
+  .brand{font-family:var(--hand); font-weight:700; font-size:26px; letter-spacing:.5px;}
+  .brand .zz{color:var(--accent);}
+  .brand .star{color:var(--gold);}
+  .tagline{font-family:var(--note); font-size:20px; color:var(--ink-soft);}
+  .legend{margin-left:auto; display:flex; gap:16px; font-family:var(--note); font-size:17px; color:var(--ink-soft); align-items:center;}
+  .legend i{display:inline-block; width:13px; height:13px; border-radius:50%; margin-right:5px; vertical-align:-1px;}
+  .legend .l-acc{background:var(--accent);}
+  .legend .l-emph{background:var(--accent-2);}
+  .legend .l-gold{background:var(--gold);}
+
+  /* ---------- tabs ---------- */
+  nav.tabs{display:flex; gap:4px; flex-wrap:wrap; margin-top:12px;}
+  .tab{
+    font-family:var(--hand); font-size:15px; font-weight:400;
+    background:transparent; color:var(--ink-soft);
+    border:2px solid transparent; border-bottom:none;
+    padding:8px 14px 9px; cursor:pointer; border-radius:10px 10px 0 0;
+    position:relative; top:2px; white-space:nowrap;
+  }
+  .tab:hover{color:var(--ink); background:rgba(0,0,0,0.03);}
+  .tab.active{
+    background:var(--paper); color:var(--ink); font-weight:700;
+    border-color:var(--line); border-bottom:2px solid var(--paper);
+  }
+  .tab .num{font-family:var(--note); color:var(--line-soft); font-size:14px; margin-right:5px;}
+  .tab.active .num{color:var(--accent);}
+
+  /* ---------- screen view ---------- */
+  main{padding:30px 26px 90px;}
+  .view{display:none;}
+  .view.active{display:block;}
+  @media (prefers-reduced-motion: no-preference){
+    .view.active{animation:fade .25s ease both;}
+  }
+  @keyframes fade{from{opacity:.4; transform:translateY(6px);} to{opacity:1; transform:none;}}
+
+  .view-head{max-width:980px; margin:0 auto 26px;}
+  .view-head h2{font-family:var(--hand); font-weight:700; font-size:30px; margin:0 0 4px;}
+  .view-head h2 .job{color:var(--accent); font-family:var(--note); font-size:26px; font-weight:600;}
+  .view-head p{font-family:var(--note); font-size:21px; color:var(--ink-soft); margin:0; line-height:1.35; max-width:760px;}
+
+  .stage{display:flex; flex-wrap:wrap; gap:46px 54px; justify-content:center; align-items:flex-start;}
+
+  /* ---------- phone frame ---------- */
+  .device{width:330px; flex:0 0 auto;}
+  .device .cap{
+    font-family:var(--hand); font-weight:700; font-size:17px; text-align:center;
+    margin-bottom:8px;
+  }
+  .device .cap small{display:block; font-family:var(--note); font-weight:500; font-size:16px; color:var(--ink-soft);}
+  .phone{
+    width:330px; height:680px; background:var(--card);
+    border:3px solid var(--line);
+    border-radius:34px;
+    padding:12px 10px;
+    position:relative;
+    box-shadow:5px 6px 0 rgba(0,0,0,0.08);
+  }
+  .phone::before{ /* notch */
+    content:""; position:absolute; top:12px; left:50%; transform:translateX(-50%);
+    width:96px; height:7px; background:var(--line-soft); border-radius:6px;
+  }
+  .screen{
+    position:absolute; inset:12px 10px; border-radius:24px; overflow:hidden;
+    display:flex; flex-direction:column;
+    background:var(--card);
+  }
+  .screen.kid{background:#fffdf7;}
+  .screen.scroll{overflow-y:auto;}
+
+  /* sketch primitives */
+  .rough{ border:2px solid var(--line); border-radius:255px 12px 225px 14px/14px 225px 12px 255px; }
+  .rough-2{ border:2px solid var(--line); border-radius:14px 230px 12px 240px/235px 12px 245px 13px; }
+  .dashed{border-style:dashed;}
+  .fill-soft{background:var(--paper);}
+  .fill-soft2{background:var(--paper-2);}
+
+  .ico{ display:inline-flex; align-items:center; justify-content:center;
+    border:2px solid var(--line); border-radius:8px; color:var(--line-soft);
+    font-family:var(--hand); font-size:13px; flex:0 0 auto; }
+  .ico.x::before{content:""; position:absolute;}
+  .ico-lg{width:54px; height:54px;}
+  .ico-md{width:40px; height:40px;}
+  .ico-sm{width:26px; height:26px; font-size:11px;}
+  .ico-circ{border-radius:50%;}
+
+  /* real-photo placeholder (head + shoulders silhouette) */
+  .face-photo{
+    border:2px solid var(--line); border-radius:50%; flex:0 0 auto; position:relative;
+    background:
+      radial-gradient(circle at 50% 36%, var(--line-soft) 0 15%, transparent 16%),
+      radial-gradient(58% 42% at 50% 106%, var(--line-soft) 0 72%, transparent 73%),
+      var(--paper-2);
+  }
+  .face-upload{
+    border:2px dashed var(--line-soft); border-radius:50%; flex:0 0 auto;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:var(--paper); color:var(--ink-soft);
+    font-family:var(--note); font-size:14px; text-align:center; line-height:1.1; gap:2px;
+  }
+  .face-upload .plus{font-size:26px; font-weight:700; color:var(--line-soft); line-height:1;}
+
+  .tl{ /* text line placeholder */
+    height:9px; border-radius:5px; background:var(--paper-2);
+  }
+  .tl.dark{background:#d8d2c4;}
+  .tl.w40{width:40%;} .tl.w55{width:55%;} .tl.w70{width:70%;} .tl.w85{width:85%;} .tl.w100{width:100%;}
+
+  .lbl{font-family:var(--hand); font-weight:700;}
+  .lbl-sm{font-family:var(--hand); font-size:12px; color:var(--ink-soft);}
+  .hand-note{font-family:var(--note); color:var(--ink-soft);}
+
+  .star-tok{color:var(--gold); font-size:15px;}
+  .flame-tok{color:var(--flame);}
+
+  /* status / app bar inside screen */
+  .kid-topbar{
+    display:flex; align-items:center; gap:8px; padding:14px 14px 10px;
+    border-bottom:2px dashed var(--line-soft);
+  }
+  .kid-topbar .spacer{flex:1;}
+  .pill{
+    display:inline-flex; align-items:center; gap:5px;
+    border:2px solid var(--line); border-radius:999px; padding:5px 11px;
+    font-family:var(--hand); font-weight:700; font-size:15px;
+  }
+
+  /* habit card */
+  .habit{
+    display:flex; align-items:center; gap:12px; padding:12px;
+    border:2px solid var(--line); border-radius:16px; background:#fff;
+    position:relative;
+  }
+  .habit.core{border-width:2.5px;}
+  .habit.done{background:var(--paper); opacity:.78;}
+  .habit.locked{border-style:dashed; color:var(--line-soft); background:repeating-linear-gradient(45deg,#fafafa,#fafafa 7px,#f0f0f0 7px,#f0f0f0 14px);}
+  .habit .body{flex:1; min-width:0; display:flex; flex-direction:column; gap:7px;}
+  .check{
+    width:30px; height:30px; border:2.5px solid var(--line); border-radius:50%;
+    flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+    font-family:var(--hand); color:var(--line-soft);
+  }
+  .check.on{background:var(--gold); border-color:var(--gold); color:#fff;}
+  .lockchip{position:absolute; top:-10px; right:10px; background:#fff; padding:0 6px; font-family:var(--note); font-size:15px; color:var(--accent-2);}
+
+  /* annotation callouts */
+  .annot{
+    position:relative; max-width:300px;
+    font-family:var(--note); font-size:18px; line-height:1.25;
+    color:var(--accent);
+    padding-left:16px; border-left:3px solid var(--accent);
+    margin:4px 0;
+  }
+  .annot.emph{color:var(--accent-2); border-color:var(--accent-2);}
+  .annot b{font-weight:700;}
+  .annot-stack{display:flex; flex-direction:column; gap:14px; max-width:280px; padding-top:30px;}
+  .annot-stack h4{font-family:var(--hand); font-weight:700; font-size:17px; margin:0; color:var(--ink);}
+
+  .arrow{font-family:var(--note); color:var(--accent); font-size:22px;}
+
+  /* sequence strip number badge */
+  .step-badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff;
+    font-family:var(--hand); font-weight:700; font-size:14px; margin-right:7px;
+  }
+
+  /* parent (calm) screen */
+  .screen.parent{background:#fbfbfb;}
+  .grid-cell{width:22px; height:22px; border:1.5px solid var(--line-soft); border-radius:5px;}
+  .grid-cell.f{background:var(--gold); border-color:var(--gold);}
+  .grid-cell.e{background:#fff;}
+
+  footer.foot{
+    text-align:center; font-family:var(--note); font-size:17px; color:var(--line-soft);
+    padding:20px; border-top:2px dashed var(--line-soft); margin-top:30px;
+  }
+
+  /* small helpers */
+  .row{display:flex; gap:10px;}
+  .col{display:flex; flex-direction:column;}
+  .center{align-items:center; justify-content:center;}
+  .between{justify-content:space-between;}
+  .wrap{flex-wrap:wrap;}
+  .pad{padding:14px;}
+  .gap6{gap:6px;} .gap8{gap:8px;} .gap10{gap:10px;} .gap12{gap:12px;} .gap14{gap:14px;}
+  .mt-auto{margin-top:auto;}
+  .grow{flex:1;}
+  .tac{text-align:center;}
+  .muted{color:var(--ink-soft);}
+
+  /* ---- Big Dream metaphor comparison tiles ---- */
+  .metaphor{width:316px; flex:0 0 auto;}
+  .metaphor .frame{
+    border:2.5px solid var(--line); border-radius:20px; background:#fffdf7;
+    height:240px; position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .metaphor .ttl{font-family:var(--hand); font-weight:700; font-size:19px; margin:12px 0 2px;}
+  .metaphor .ttl .k{color:var(--accent); font-family:var(--note); font-weight:600; font-size:17px;}
+  .metaphor .conveys{font-family:var(--note); font-size:18px; color:var(--ink-soft); line-height:1.3; margin:2px 0 6px;}
+  .metaphor .tradeoff{font-family:var(--note); font-size:17px; color:var(--accent-2); line-height:1.25; padding-left:14px; border-left:3px solid var(--accent-2);}
+  .metaphor.lead .frame{border-color:var(--gold); box-shadow:4px5px0 rgba(232,169,29,.18);}
+  .metaphor.lead .ttl::after{content:" ← my pick"; font-family:var(--note); color:var(--gold); font-weight:600; font-size:16px;}
+  .sp{position:absolute; color:var(--gold); line-height:1;}
+  .sp.f{color:var(--line-soft); opacity:.45;}
+  .brk{height:22px; border:1.5px solid var(--line-soft); border-radius:4px; background:#fff;}
+  .brk.f{background:var(--gold); border-color:var(--gold);}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-row">
+    <div class="brand">Starque<span class="zz">ZZ</span> <span class="star">✦</span></div>
+    <div class="tagline">Wireframe explorer — low-fi structure &amp; flow</div>
+    <div class="legend">
+      <span><i class="l-acc"></i>motion / behaviour notes</span>
+      <span><i class="l-emph"></i>watch-outs</span>
+      <span><i class="l-gold"></i>stars (only color on kid side)</span>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+</header>
+
+<main id="main">
+
+  <!-- ============ LAUNCH ============ -->
+  <section class="view" data-tab="Launch" data-num="01">
+    <div class="view-head">
+      <h2>Daily launch &amp; sign-in <span class="job">— “get me to my board”</span></h2>
+      <p>Every open after the first is a kid who wants their board now. Splash &lt; 2s, tap-your-face login, optional secret code only when a parent turns it on for a 2+ kid family.</p>
+    </div>
+    <div class="stage">
+      <!-- splash -->
+      <div class="device">
+        <div class="cap">Daily splash <small>cold start &lt; 2s · resume = instant</small></div>
+        <div class="phone"><div class="screen kid col center">
+          <div class="col center gap12" style="margin:auto;">
+            <div class="ico-lg ico ico-circ" style="width:74px;height:74px; color:var(--gold); font-size:30px;">✦</div>
+            <div class="lbl" style="font-size:26px;">Starque<span style="color:var(--accent);">ZZ</span></div>
+            <div class="tl w40" style="margin-top:4px;"></div>
+          </div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <h4>Splash → board</h4>
+        <div class="annot"><b>Cold start:</b> a star streaks in, lands, bursts into the wordmark. The app’s “hello”, not a speech.</div>
+        <div class="annot"><b>Resume:</b> instant, no animation. Doubles as the PWA launch screen.</div>
+        <div class="annot emph">Reduced-motion → simple fade, static.</div>
+      </div>
+
+      <!-- avatar select -->
+      <div class="device">
+        <div class="cap">Avatar select <small>“which kid are you?”</small></div>
+        <div class="phone"><div class="screen kid col">
+          <div class="pad tac"><div class="lbl" style="font-size:20px;">Who’s playing?</div></div>
+          <div class="row center gap14" style="margin:auto; padding:20px; flex-wrap:wrap;">
+            <div class="col center gap8">
+              <div class="face-photo" style="width:104px;height:104px;"></div>
+              <div class="lbl">Zen</div>
+            </div>
+            <div class="col center gap8">
+              <div class="face-photo" style="width:104px;height:104px;"></div>
+              <div class="lbl">Zia</div>
+            </div>
+          </div>
+          <div class="pad tac hand-note" style="font-size:16px;">tap your face to start ✦</div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <h4>Tapping = login</h4>
+        <div class="annot">Big tappable faces (≥104px) — <b>real uploaded photos</b>, so a pre-reader (Zia, 5) recognises herself instantly. Avatars are the icon-first fallback.</div>
+        <div class="annot">Tap your face → it <b>bounces / waves</b> → board opens. <b>No PIN by default.</b></div>
+      </div>
+
+      <!-- secret code -->
+      <div class="device">
+        <div class="cap">Secret code <small>optional · 2+ kids only</small></div>
+        <div class="phone"><div class="screen kid col">
+          <div class="col center gap8" style="padding:18px 0 6px;">
+            <div class="face-photo" style="width:78px;height:78px;"></div>
+            <div class="lbl" style="font-size:18px;">Zen’s secret code</div>
+          </div>
+          <div class="row center gap10" style="padding:6px 0 14px;">
+            <div class="ico-md ico ico-circ" style="background:var(--gold);border-color:var(--gold);"></div>
+            <div class="ico-md ico ico-circ" style="background:var(--gold);border-color:var(--gold);"></div>
+            <div class="ico-md ico ico-circ"></div>
+            <div class="ico-md ico ico-circ"></div>
+          </div>
+          <div class="row wrap center gap10" style="padding:0 40px 20px; margin-top:auto;">
+            <div class="ico" style="width:62px;height:54px;font-size:20px;">1</div>
+            <div class="ico" style="width:62px;height:54px;font-size:20px;">2</div>
+            <div class="ico" style="width:62px;height:54px;font-size:20px;">3</div>
+            <div class="ico" style="width:62px;height:54px;font-size:20px;">4</div>
+            <div class="ico" style="width:62px;height:54px;font-size:20px;">5</div>
+            <div class="ico" style="width:62px;height:54px;font-size:20px;">6</div>
+            <div class="ico" style="width:62px;height:54px;font-size:20px;">7</div>
+            <div class="ico" style="width:62px;height:54px;font-size:20px;">8</div>
+            <div class="ico" style="width:62px;height:54px;font-size:20px;">9</div>
+          </div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <h4>Ownership, not a lock</h4>
+        <div class="annot">The kid’s <b>own photo sits on top</b> — Zia confirms “that’s me” before tapping a single digit. Kid-proportioned keypad, instant feedback per digit; <b>gentle shake</b> on a wrong code.</div>
+        <div class="annot emph">Never punitive language. The enabling toggle only appears for 2+ child families.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ROUTINE BOARD ============ -->
+  <section class="view" data-tab="Routine Board" data-num="02">
+    <div class="view-head">
+      <h2>Routine board — the heart <span class="job">— answer “what now?”</span></h2>
+      <p>Three distinct structural approaches to compare. All share: current time-block first, icon-dominant cards (≥64px), cores distinct from bonus, bonus locked until cores done, persistent star counter + streak flame, 5-min undo.</p>
+    </div>
+    <div class="stage">
+      <!-- Approach A -->
+      <div class="device">
+        <div class="cap">A · Time-block list <small>everything visible, scroll the block</small></div>
+        <div class="phone"><div class="screen kid scroll">
+          <div class="kid-topbar">
+            <div class="pill"><span class="star-tok">✦</span> 23</div>
+            <div class="pill"><span class="flame-tok">🔥</span> 5</div>
+            <div class="spacer"></div>
+            <div class="ico ico-sm">avatar</div>
+          </div>
+          <div class="row center between" style="padding:10px 14px 6px;">
+            <span class="arrow">‹</span>
+            <div class="lbl" style="font-size:18px;">Morning</div>
+            <span class="arrow">›</span>
+          </div>
+          <div class="col gap10 pad" style="padding-top:4px;">
+            <div class="habit core"><div class="ico ico-lg">icon</div><div class="body"><div class="lbl">Brush teeth</div><div class="tl w55"></div></div><div class="check on">✓</div></div>
+            <div class="habit core"><div class="ico ico-lg">icon</div><div class="body"><div class="lbl">Get dressed</div><div class="tl w40"></div></div><div class="check">○</div></div>
+            <div class="habit core"><div class="ico ico-lg">icon</div><div class="body"><div class="lbl">Breakfast</div><div class="tl w55"></div></div><div class="check">○</div></div>
+            <div class="habit locked"><span class="lockchip">🔒 finish cores</span><div class="ico ico-lg">icon</div><div class="body"><div class="lbl">Read a book</div><div class="lbl-sm">bonus · +2 ✦</div></div></div>
+          </div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <div class="annot"><b>Cores</b> stack at top, heavier border. <b>Bonus</b> sits below, dashed &amp; locked — “a lock that begs to be opened”.</div>
+        <div class="annot">Star counter + streak flame pinned top-left, always visible.</div>
+        <div class="annot emph">Risk: a long block can push bonus below the fold — keep cores ≤ ~5.</div>
+      </div>
+
+      <!-- Approach B -->
+      <div class="device">
+        <div class="cap">B · Hero “do this now” <small>one card front-centre + up-next queue</small></div>
+        <div class="phone"><div class="screen kid col">
+          <div class="kid-topbar">
+            <div class="pill"><span class="star-tok">✦</span> 23</div>
+            <div class="pill"><span class="flame-tok">🔥</span> 5</div>
+            <div class="spacer"></div>
+            <div class="lbl-sm">Morning ▾</div>
+          </div>
+          <div class="pad col center gap12" style="padding-top:8px;">
+            <div class="lbl-sm">do this now</div>
+            <div class="rough col center gap10" style="padding:22px; width:100%;">
+              <div class="ico" style="width:84px;height:84px;font-size:14px;">icon</div>
+              <div class="lbl" style="font-size:22px;">Get dressed</div>
+              <div class="check" style="width:54px;height:54px;font-size:20px;">tap ✓</div>
+            </div>
+            <div class="lbl-sm" style="align-self:flex-start;">up next</div>
+            <div class="row gap8" style="width:100%;">
+              <div class="ico-md ico">icon</div><div class="ico-md ico">icon</div>
+              <div class="ico-md ico" style="border-style:dashed;color:var(--line-soft);">🔒</div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <div class="annot">One giant target = the lowest-cognitive-load option for Zia (5, pre-reader). “Up next” shows the queue small.</div>
+        <div class="annot"><b>Check-off star-flight</b> reads beautifully here — star leaps from the hero card to the counter.</div>
+        <div class="annot emph">Risk: hides the sense of “how much is left”. Mitigate with the queue dots.</div>
+      </div>
+
+      <!-- Approach C -->
+      <div class="device">
+        <div class="cap">C · Journey path <small>habits as steps along a trail</small></div>
+        <div class="phone"><div class="screen kid col">
+          <div class="kid-topbar">
+            <div class="pill"><span class="star-tok">✦</span> 23</div>
+            <div class="pill"><span class="flame-tok">🔥</span> 5</div>
+            <div class="spacer"></div>
+            <div class="lbl-sm">Morning</div>
+          </div>
+          <div class="col center grow" style="position:relative; padding:14px;">
+            <div style="position:absolute; top:30px; bottom:30px; left:50%; width:3px; background:repeating-linear-gradient(var(--line-soft) 0 8px, transparent 8px 16px);"></div>
+            <div class="row center between" style="width:100%; position:relative; margin:6px 0;"><div class="ico ico-lg" style="background:var(--gold);border-color:var(--gold);">✓</div><div class="grow"></div><div class="tl w40"></div></div>
+            <div class="row center between" style="width:100%; position:relative; margin:6px 0;"><div class="tl w40"></div><div class="grow"></div><div class="ico ico-lg rough" style="border-width:3px;">now</div></div>
+            <div class="row center between" style="width:100%; position:relative; margin:6px 0;"><div class="ico ico-lg">icon</div><div class="grow"></div><div class="tl w40"></div></div>
+            <div class="row center between" style="width:100%; position:relative; margin:6px 0;"><div class="tl w40"></div><div class="grow"></div><div class="ico ico-lg" style="border-style:dashed;color:var(--line-soft);">🔒</div></div>
+          </div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <div class="annot">Progress is <b>spatial</b> — done steps behind you, the trail ahead. Naturally gamey, great for motion (walk the path).</div>
+        <div class="annot">Bonus = a fork at the end of the trail that lights up.</div>
+        <div class="annot emph">Risk: least dense; switching time-blocks is less obvious. Strongest delight, weakest glanceability.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STAR JAR ============ -->
+  <section class="view" data-tab="Star Jar" data-num="03">
+    <div class="view-head">
+      <h2>Star jar <span class="job">— make the balance physical</span></h2>
+      <p>Counting is the fun. Stars are objects that stack and settle; a week calendar of star-days and the streak history live below. When a Big Dream is active, a brick wall shows progress as anticipation — never pressure.</p>
+    </div>
+    <div class="stage">
+      <div class="device">
+        <div class="cap">Star jar <small>default</small></div>
+        <div class="phone"><div class="screen kid scroll">
+          <div class="pad tac"><div class="lbl" style="font-size:20px;">Your stars</div></div>
+          <div class="col center" style="padding:6px 14px;">
+            <div class="rough col center" style="width:160px;height:180px;justify-content:flex-end;padding:14px;position:relative;">
+              <div class="hand-note" style="position:absolute;top:8px;font-size:15px;">jar</div>
+              <div class="row wrap center gap6" style="width:100%;">
+                <span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span>
+                <span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span>
+                <span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span>
+                <span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span>
+              </div>
+            </div>
+            <div class="lbl" style="font-size:24px;margin-top:8px;"><span class="star-tok">✦</span> 23</div>
+          </div>
+          <div class="pad col gap8">
+            <div class="lbl-sm">this week</div>
+            <div class="row between">
+              <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">M</div></div>
+              <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">T</div></div>
+              <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">W</div></div>
+              <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">T</div></div>
+              <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">F</div></div>
+              <div class="col center gap6"><div class="grid-cell e"></div><div class="lbl-sm">S</div></div>
+              <div class="col center gap6"><div class="grid-cell e"></div><div class="lbl-sm">S</div></div>
+            </div>
+            <div class="row center gap8" style="margin-top:6px;"><span class="flame-tok">🔥</span><span class="lbl-sm">5-day streak — best yet!</span></div>
+          </div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <h4>Quantity you can see</h4>
+        <div class="annot">Stars render as <b>individual objects</b> that stack &amp; settle with weight — not a number with a star next to it.</div>
+        <div class="annot">Week strip = star-days lit gold. Streak shown warmly.</div>
+        <div class="annot emph">A broken streak resets quietly — the flame just goes out. Never animate failure, never shame.</div>
+      </div>
+
+      <div class="device">
+        <div class="cap">Big Dream wall <small>when a long-term goal is active</small></div>
+        <div class="phone"><div class="screen kid scroll">
+          <div class="pad tac"><div class="lbl" style="font-size:19px;">Big Dream</div><div class="hand-note" style="font-size:16px;">Sleepover camp-out 🏕️</div></div>
+          <div class="pad col center">
+            <div class="col gap6" style="width:200px;">
+              <div class="row gap6"><div class="grid-cell f" style="flex:1;height:20px;"></div><div class="grid-cell f" style="flex:1;height:20px;"></div><div class="grid-cell f" style="flex:1;height:20px;"></div></div>
+              <div class="row gap6" style="margin-left:14px;"><div class="grid-cell f" style="flex:1;height:20px;"></div><div class="grid-cell f" style="flex:1;height:20px;"></div><div class="grid-cell e" style="flex:1;height:20px;"></div></div>
+              <div class="row gap6"><div class="grid-cell f" style="flex:1;height:20px;"></div><div class="grid-cell e" style="flex:1;height:20px;"></div><div class="grid-cell e" style="flex:1;height:20px;"></div></div>
+              <div class="row gap6" style="margin-left:14px;"><div class="grid-cell e" style="flex:1;height:20px;"></div><div class="grid-cell e" style="flex:1;height:20px;"></div><div class="grid-cell e" style="flex:1;height:20px;"></div></div>
+            </div>
+            <div class="lbl-sm" style="margin-top:10px;">6 of 12 bricks laid</div>
+          </div>
+          <div class="pad rough-2 fill-soft" style="margin:6px 14px;">
+            <div class="hand-note" style="font-size:16px;">The pledge: “When the wall is built, we camp out in the garden.” — anchor event visible.</div>
+          </div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <h4>Anticipation, not pressure</h4>
+        <div class="annot">A perfect week lays <b>one brick</b> (set in the ceremony) — a weighty, distinct beat from star effects.</div>
+        <div class="annot">Pledge + anchor event always visible so the dream feels real.</div>
+        <div class="annot emph">No countdowns, no “you’re behind”. Bricks only ever add.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ADVENTURE MENU ============ -->
+  <section class="view" data-tab="Adventure Menu" data-num="04">
+    <div class="view-head">
+      <h2>Adventure menu <span class="job">— motivation through browsing</span></h2>
+      <p>A pre-decided menu of shared adventures — never toys or money. Affordable tiers glow; unaffordable ones stay visible with an “X more ✦” progress, never hidden. The 0-star fallback is always present and warm.</p>
+    </div>
+    <div class="stage">
+      <div class="device">
+        <div class="cap">Adventure menu <small>tiered, illustration-led</small></div>
+        <div class="phone"><div class="screen kid scroll">
+          <div class="kid-topbar"><div class="lbl" style="font-size:18px;">Adventures</div><div class="spacer"></div><div class="pill"><span class="star-tok">✦</span> 23</div></div>
+          <div class="col gap12 pad">
+            <!-- affordable -->
+            <div class="rough" style="padding:0;overflow:hidden;background:#fffdf3;border-color:var(--gold);">
+              <div class="dashed" style="height:84px;border:none;border-bottom:2px dashed var(--line-soft);display:flex;align-items:center;justify-content:center;" >
+                <span class="hand-note">illustration — bookshop trip</span>
+              </div>
+              <div class="row between center pad" style="padding:10px 12px;">
+                <div class="col"><div class="lbl">Bookshop trip</div><div class="lbl-sm">unlocked ✓</div></div>
+                <div class="pill" style="border-color:var(--gold);"><span class="star-tok">✦</span> 20</div>
+              </div>
+            </div>
+            <!-- unaffordable -->
+            <div class="rough-2" style="padding:0;overflow:hidden;opacity:.92;">
+              <div style="height:72px;border-bottom:2px dashed var(--line-soft);display:flex;align-items:center;justify-content:center;">
+                <span class="hand-note">illustration — treasure hunt</span>
+              </div>
+              <div class="row between center pad" style="padding:10px 12px;">
+                <div class="col"><div class="lbl">Treasure hunt</div><div class="lbl-sm" style="color:var(--accent-2);">7 more ✦ to unlock</div></div>
+                <div class="pill"><span class="star-tok">✦</span> 30</div>
+              </div>
+            </div>
+            <!-- fallback -->
+            <div class="rough fill-soft" style="padding:12px;">
+              <div class="row center gap10"><div class="ico ico-md ico-circ">★</div><div class="col"><div class="lbl">Always-on: Pancake morning</div><div class="lbl-sm">0 ✦ · any week, together</div></div></div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <h4>Browse to dream</h4>
+        <div class="annot">Each tier <b>leads with its illustration</b> — the delight carrier. Price as a star pill.</div>
+        <div class="annot"><b>Affordable</b> glows / unlocked. <b>Unaffordable</b> stays visible with “X more ✦” progress — never hidden.</div>
+        <div class="annot emph">The 0-star fallback must read as warm &amp; chosen, <b>never a consolation prize</b>. Equal card weight.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CEREMONY ============ -->
+  <section class="view" data-tab="Sunday Ceremony" data-num="05">
+    <div class="view-head">
+      <h2>Sunday star ceremony <span class="job">— the weekly ritual</span></h2>
+      <p>A guided, full-screen, couch-together mode — the emotional peak of the week. It’s a sequence, not a screen. Four beats, escalating.</p>
+    </div>
+    <div class="stage">
+      <!-- step 1 -->
+      <div class="device">
+        <div class="cap"><span class="step-badge">1</span>Recap</div>
+        <div class="phone"><div class="screen kid col center">
+          <div class="pad tac"><div class="lbl" style="font-size:18px;">Your week</div></div>
+          <div class="row center gap6" style="padding:10px;">
+            <div class="grid-cell f"></div><div class="grid-cell f"></div><div class="grid-cell f"></div>
+            <div class="grid-cell f"></div><div class="grid-cell f"></div><div class="grid-cell e"></div><div class="grid-cell e"></div>
+          </div>
+          <div class="col center gap8" style="margin:auto;">
+            <div class="rough col center" style="width:120px;height:120px;justify-content:flex-end;padding:10px;">
+              <div class="row wrap center gap6"><span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span></div>
+            </div>
+            <div class="hand-note">stars fly in, count up…</div>
+          </div>
+        </div></div>
+      </div>
+      <!-- step 2 -->
+      <div class="device">
+        <div class="cap"><span class="step-badge">2</span>Streak reveal</div>
+        <div class="phone"><div class="screen kid col center">
+          <div class="col center gap12" style="margin:auto;">
+            <div class="ico ico-circ" style="width:96px;height:96px;font-size:34px;color:var(--flame);border-color:var(--flame);">🔥</div>
+            <div class="lbl" style="font-size:24px;">Perfect week!</div>
+            <div class="hand-note tac" style="max-width:200px;">…or a warm “next week!” — big payoff either way, never shame.</div>
+            <div class="rough fill-soft pad" style="margin-top:6px;"><div class="hand-note" style="font-size:16px;">+ a brick lands on the Big Dream wall 🧱</div></div>
+          </div>
+        </div></div>
+      </div>
+      <!-- step 3 -->
+      <div class="device">
+        <div class="cap"><span class="step-badge">3</span>Adventure pick</div>
+        <div class="phone"><div class="screen kid col center">
+          <div class="pad tac"><div class="lbl" style="font-size:18px;">Pick this week’s adventure</div></div>
+          <div class="col center gap10" style="margin:auto;width:80%;">
+            <div class="rough" style="height:70px;width:100%;display:flex;align-items:center;justify-content:center;opacity:.5;"><span class="hand-note">bookshop</span></div>
+            <div class="rough" style="height:90px;width:100%;display:flex;align-items:center;justify-content:center;border-color:var(--gold);background:#fffdf3;"><span class="hand-note">playground ✦</span></div>
+            <div class="rough" style="height:70px;width:100%;display:flex;align-items:center;justify-content:center;opacity:.5;"><span class="hand-note">treasure hunt</span></div>
+          </div>
+          <div class="pad hand-note tac" style="font-size:16px;">feels like a slot-pull of joy — but the kid chooses.</div>
+        </div></div>
+      </div>
+      <!-- step 4 -->
+      <div class="device">
+        <div class="cap"><span class="step-badge">4</span>Sealed!</div>
+        <div class="phone"><div class="screen kid col center">
+          <div class="col center" style="margin:auto;">
+            <div class="rough-2" style="width:210px;padding:0;overflow:hidden;background:#fff;transform:rotate(-3deg);box-shadow:4px5px0 rgba(0,0,0,.1);">
+              <div style="height:90px;border-bottom:2px dashed var(--line-soft);display:flex;align-items:center;justify-content:center;"><span class="hand-note">illustration</span></div>
+              <div class="pad tac"><div class="lbl">Playground adventure</div><div class="lbl-sm">Sat 14 June · with Dad</div></div>
+              <div style="border-top:2px dashed var(--line-soft);" class="pad tac"><span class="hand-note" style="font-size:15px;">🎟️ TICKET — keep me!</span></div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+      <div style="flex-basis:100%;height:0;"></div>
+      <div class="annot-stack" style="max-width:760px;padding-top:6px;">
+        <h4>Sequence notes</h4>
+        <div class="annot"><b>Earn the big moments:</b> tempo escalates across the four beats; the ceremony count-up is bigger than any single check-off.</div>
+        <div class="annot">The <b>ticket is a designed object</b> (date + illustration) — it may reappear on the routine board all week as the thing being looked forward to.</div>
+        <div class="annot emph">No randomness in the pick — the “slot-machine” feeling is in the kid’s hands, not in chance. No dark patterns.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ONBOARDING ============ -->
+  <section class="view" data-tab="Onboarding" data-num="06">
+    <div class="view-head">
+      <h2>First-run: manifesto + onboarding <span class="job">— parent, once</span></h2>
+      <p>The manifesto carries the emotional <em>why</em> (calm, typographic, the star ignites on the last line). Onboarding 1–3 then explain the <em>how</em> — one idea per screen — and never repeat the pitch.</p>
+    </div>
+    <div class="stage">
+      <div class="device">
+        <div class="cap">Manifesto <small>parent · ~8–10s · skippable</small></div>
+        <div class="phone"><div class="screen parent col center" style="background:#1c1c22;color:#eee;">
+          <div class="col center gap14" style="margin:auto;padding:24px;text-align:center;">
+            <div class="hand-note" style="color:#bbb;font-size:19px;">We live in the most<br>distracting world ever built.</div>
+            <div class="tl w70" style="background:#3a3a42;"></div>
+            <div class="tl w55" style="background:#3a3a42;"></div>
+            <div style="color:var(--gold);font-size:30px;">✦</div>
+            <div class="hand-note" style="color:#fff;font-size:18px;">A playful childhood.<br>With you in it.</div>
+          </div>
+          <div class="pad hand-note" style="color:#888;font-size:15px;">tap to advance · skip</div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <h4>Line-by-line reveal</h4>
+        <div class="annot">Each line lands, breathes, gives way. Register starts <b>calm &amp; grown-up</b>.</div>
+        <div class="annot">On the final line the <b>star motif ignites</b> — first hint of the kid world inside. Flows straight into onboarding 1.</div>
+        <div class="annot emph">Reduced-motion: static lines, no choreography.</div>
+      </div>
+
+      <div class="device">
+        <div class="cap">Onboarding 1–3 <small>swipeable, illustrated</small></div>
+        <div class="phone"><div class="screen parent col">
+          <div style="height:150px;border-bottom:2px dashed var(--line-soft);display:flex;align-items:center;justify-content:center;margin:14px;border-radius:14px;" class="rough fill-soft"><span class="hand-note">illustration — kid + parent, together</span></div>
+          <div class="pad col gap10">
+            <div class="lbl" style="font-size:19px;">Stars buy adventures together.</div>
+            <div class="hand-note muted" style="font-size:17px;">Bookshop trips, playgrounds — never toys or money.</div>
+          </div>
+          <div class="row center gap6" style="margin-top:auto;padding:14px;">
+            <div class="grid-cell e" style="border-radius:50%;width:10px;height:10px;"></div>
+            <div class="grid-cell f" style="border-radius:50%;width:10px;height:10px;"></div>
+            <div class="grid-cell e" style="border-radius:50%;width:10px;height:10px;"></div>
+          </div>
+          <div class="pad"><div class="rough tac pad" style="background:var(--accent);color:#fff;border-color:var(--accent);"><span class="lbl">Get started — free, always</span></div></div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <h4>One idea per screen</h4>
+        <div class="annot"><b>1 · the kid’s win</b> — “your kid checks the board, not you”.</div>
+        <div class="annot"><b>2 · the reward reframe</b> — the differentiator; kid + parent always in the illustration, together.</div>
+        <div class="annot"><b>3 · the parent’s win</b> — “two minutes a week” → ends on the CTA.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCOUT WIZARD ============ -->
+  <section class="view" data-tab="Scout Setup" data-num="07">
+    <div class="view-head">
+      <h2>Setup wizard — Scout <span class="job">— the parent-side front door</span></h2>
+      <p>Chat-style intake; suggestions arrive as <b>draft cards</b> to accept / edit / skip — the signature interaction of the parent side. Manual forms are the visible fallback. Reach a working board in &lt; 10 min, then hand the device to the kid.</p>
+    </div>
+    <div class="stage">
+      <!-- Add child + photo upload -->
+      <div class="device">
+        <div class="cap">Add child <small>wizard step 1 · name · age · photo</small></div>
+        <div class="phone"><div class="screen parent col">
+          <div class="kid-topbar"><div class="lbl" style="font-size:17px;">Add your child</div><div class="spacer"></div><div class="lbl-sm">1 of 4</div></div>
+          <div class="col center gap8" style="padding:18px 0 6px;">
+            <div class="face-upload" style="width:96px;height:96px;"><span class="plus">＋</span>add photo</div>
+            <div class="lbl-sm">take or upload a photo</div>
+          </div>
+          <div class="col gap12 pad">
+            <div class="col gap6"><div class="lbl-sm">Name</div><div class="rough fill-soft" style="height:38px;border-radius:10px;display:flex;align-items:center;padding:0 12px;"><span class="hand-note" style="font-size:16px;">Zen</span></div></div>
+            <div class="col gap6"><div class="lbl-sm">Age</div><div class="rough fill-soft" style="height:38px;border-radius:10px;display:flex;align-items:center;padding:0 12px;"><span class="hand-note" style="font-size:16px;">8</span></div></div>
+            <div class="col gap6">
+              <div class="lbl-sm">…or pick an avatar instead</div>
+              <div class="row gap8">
+                <div class="ico ico-md ico-circ">A</div>
+                <div class="ico ico-md ico-circ">B</div>
+                <div class="ico ico-md ico-circ">C</div>
+                <div class="ico ico-md ico-circ">D</div>
+              </div>
+            </div>
+          </div>
+          <div class="pad mt-auto"><div class="rough tac pad" style="background:var(--accent);color:#fff;border-color:var(--accent);"><span class="lbl">Next</span></div></div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <h4>Upload the kid’s face</h4>
+        <div class="annot">Parent <b>takes or uploads a photo</b> here in setup — it becomes the avatar on the select &amp; code screens.</div>
+        <div class="annot">Illustrated <b>avatars are the fallback</b> for parents who’d rather not use a photo. Either way the child gets a recognisable face.</div>
+        <div class="annot emph">Photo is local to the family’s device — privacy-first, never required.</div>
+      </div>
+
+      <div class="device">
+        <div class="cap">Scout chat + draft cards</div>
+        <div class="phone"><div class="screen parent scroll">
+          <div class="kid-topbar"><div class="lbl" style="font-size:17px;">Scout</div><div class="spacer"></div><div class="lbl-sm">skip — I’ll do it myself</div></div>
+          <div class="col gap10 pad">
+            <div class="rough-2 pad fill-soft" style="align-self:flex-start;max-width:80%;"><div class="hand-note" style="font-size:16px;">What does Zen’s morning usually look like?</div></div>
+            <div class="rough pad" style="align-self:flex-end;max-width:80%;background:var(--accent);color:#fff;border-color:var(--accent);"><div class="hand-note" style="font-size:16px;color:#fff;">Teeth, dressed, breakfast, packs his bag…</div></div>
+            <div class="lbl-sm" style="margin-top:4px;">Scout drafted 3 habits ↓</div>
+            <!-- draft cards -->
+            <div class="rough" style="padding:10px;"><div class="row center between"><div class="row center gap8"><div class="ico ico-md">icon</div><div class="lbl">Brush teeth</div></div></div>
+              <div class="row gap8" style="margin-top:8px;"><div class="pill" style="font-size:13px;padding:3px 9px;border-color:var(--accent);color:var(--accent);">accept</div><div class="pill" style="font-size:13px;padding:3px 9px;">edit</div><div class="pill" style="font-size:13px;padding:3px 9px;color:var(--line-soft);">skip</div></div>
+            </div>
+            <div class="rough" style="padding:10px;opacity:.95;"><div class="row center gap8"><div class="ico ico-md">icon</div><div class="lbl">Get dressed</div></div>
+              <div class="row gap8" style="margin-top:8px;"><div class="pill" style="font-size:13px;padding:3px 9px;border-color:var(--accent);color:var(--accent);">accept</div><div class="pill" style="font-size:13px;padding:3px 9px;">edit</div><div class="pill" style="font-size:13px;padding:3px 9px;color:var(--line-soft);">skip</div></div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <h4>The draft-card pattern</h4>
+        <div class="annot">Cards <b>deal in with a soft stagger</b> — the one parent-side flourish. Each is accept / edit / skip.</div>
+        <div class="annot">Same pattern reused for habits, adventures, and the Scout re-run later.</div>
+        <div class="annot emph">Manual entry is always one tap away — “skip, I’ll do it myself”. AI is the front door, not the only door.</div>
+      </div>
+
+      <div class="device">
+        <div class="cap">Wizard finale <small>theatrical register change</small></div>
+        <div class="phone"><div class="screen col center" style="background:linear-gradient(#fbfbfb 0 45%, #fffdf7 55% 100%);">
+          <div class="col center gap10" style="margin:auto;">
+            <div class="hand-note muted" style="font-size:17px;">Board’s ready.</div>
+            <div class="lbl" style="font-size:22px;text-align:center;">Give the device<br>to your kid →</div>
+            <div class="ico ico-circ" style="width:80px;height:80px;color:var(--gold);font-size:30px;border-color:var(--gold);">✦</div>
+            <div class="rough tac pad" style="background:var(--gold);border-color:var(--gold);"><span class="lbl">Hand it over</span></div>
+          </div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <h4>The handoff</h4>
+        <div class="annot">The app <b>literally changes register</b> here — calm parent UI opens into the loud kid world.</div>
+        <div class="annot">Make the transition theatrical: the moment the parent finishes setup is the moment the toy turns on.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DIGEST ============ -->
+  <section class="view" data-tab="Weekly Digest" data-num="08">
+    <div class="view-head">
+      <h2>Weekly digest <span class="job">— parent, calm &amp; fast</span></h2>
+      <p>The whole week in one glance. Calm, dense, trustworthy — in-and-out in two minutes. Completion grid per child, stars, streak, and planned-adventure status with a one-tap “done ✓”.</p>
+    </div>
+    <div class="stage">
+      <div class="device">
+        <div class="cap">Weekly digest <small>≤ 2 min target</small></div>
+        <div class="phone"><div class="screen parent scroll">
+          <div class="kid-topbar" style="border-bottom:2px solid var(--line-soft);"><div class="lbl" style="font-size:18px;">This week</div><div class="spacer"></div><div class="lbl-sm">PIN ••••</div></div>
+          <div class="pad col gap14">
+            <!-- child 1 -->
+            <div class="col gap8">
+              <div class="row center between"><div class="lbl">Zen</div><div class="lbl-sm"><span class="star-tok">✦</span> 23 · 🔥 5</div></div>
+              <div class="row gap6">
+                <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">M</div></div>
+                <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">T</div></div>
+                <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">W</div></div>
+                <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">T</div></div>
+                <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">F</div></div>
+                <div class="col center gap6"><div class="grid-cell e"></div><div class="lbl-sm">S</div></div>
+                <div class="col center gap6"><div class="grid-cell e"></div><div class="lbl-sm">S</div></div>
+              </div>
+            </div>
+            <!-- child 2 -->
+            <div class="col gap8">
+              <div class="row center between"><div class="lbl">Zia</div><div class="lbl-sm"><span class="star-tok">✦</span> 11 · 🔥 2</div></div>
+              <div class="row gap6">
+                <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">M</div></div>
+                <div class="col center gap6"><div class="grid-cell e"></div><div class="lbl-sm">T</div></div>
+                <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">W</div></div>
+                <div class="col center gap6"><div class="grid-cell f"></div><div class="lbl-sm">T</div></div>
+                <div class="col center gap6"><div class="grid-cell e"></div><div class="lbl-sm">F</div></div>
+                <div class="col center gap6"><div class="grid-cell e"></div><div class="lbl-sm">S</div></div>
+                <div class="col center gap6"><div class="grid-cell e"></div><div class="lbl-sm">S</div></div>
+              </div>
+            </div>
+            <!-- adventure status -->
+            <div class="rough-2 pad fill-soft"><div class="row center between"><div class="col"><div class="lbl-sm">Planned adventure</div><div class="lbl">Playground · Sat</div></div><div class="pill" style="border-color:var(--accent);color:var(--accent);">done ✓</div></div></div>
+            <div class="row gap8">
+              <div class="rough tac pad grow"><span class="lbl-sm">Habits</span></div>
+              <div class="rough tac pad grow"><span class="lbl-sm">Adventures</span></div>
+              <div class="rough tac pad grow"><span class="lbl-sm">Scout</span></div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+      <div class="annot-stack">
+        <h4>Dense, calm, fast</h4>
+        <div class="annot">Completion <b>grid per child</b> = the week at a glance. Stars + streak inline.</div>
+        <div class="annot">Planned-adventure status with one-tap <b>“adventure done ✓”</b> — the single action most parents come to do.</div>
+        <div class="annot emph">Same hues as the kid side, <b>calmed</b> — one world, volume knob turned down. No delight budget spent here.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BIG DREAM METAPHORS ============ -->
+  <section class="view" data-tab="Big Dream ✦" data-num="09">
+    <div class="view-head">
+      <h2>Big Dream — what holds the long-term progress? <span class="job">— exploring the container</span></h2>
+      <p>The unit is settled: many small daily stars → <b>one rare token per perfect week</b> → it accumulates toward the Big Dream + its anchor event. Open question is the <em>container</em> for that weekly token. Five candidates, same job, different feeling. All obey: only ever adds · no countdowns · never “behind”.</p>
+    </div>
+
+    <!-- hierarchy ladder: brick (2 tiers) vs constellation (3+1 tiers) -->
+    <div style="max-width:900px; margin:0 auto 34px; display:flex; gap:28px; flex-wrap:wrap; justify-content:center;">
+      <div class="rough" style="flex:1; min-width:300px; padding:18px 20px; background:#fff;">
+        <div class="lbl" style="font-size:18px; margin-bottom:14px;">Brick model <span class="lbl-sm" style="font-weight:400;">— 2 tiers</span></div>
+        <div class="col gap8">
+          <div class="row center gap10"><div class="row gap6"><span class="star-tok">✦</span><span class="star-tok">✦</span><span class="star-tok">✦</span></div><div class="hand-note" style="font-size:16px;">daily stars → spent on adventures</div></div>
+          <div class="hand-note" style="color:var(--line-soft); padding-left:6px;">↓</div>
+          <div class="row center gap10"><div class="brk f" style="width:34px;"></div><div class="hand-note" style="font-size:16px;"><b>perfect week → 1 brick</b></div></div>
+          <div class="hand-note" style="color:var(--line-soft); padding-left:6px;">↓</div>
+          <div class="row center gap10"><div style="display:flex;gap:3px;"><div class="brk f" style="width:11px;height:14px;"></div><div class="brk f" style="width:11px;height:14px;"></div><div class="brk f" style="width:11px;height:14px;"></div></div><div class="hand-note" style="font-size:16px;">full wall (~12) → <b>the Big Dream</b></div></div>
+        </div>
+      </div>
+      <div class="rough" style="flex:1; min-width:300px; padding:18px 20px; background:#fffdf7; border-color:var(--gold);">
+        <div class="lbl" style="font-size:18px; margin-bottom:14px;">Constellation model <span class="lbl-sm" style="font-weight:400;">— 3 tiers + a lifetime one</span></div>
+        <div class="col gap8">
+          <div class="row center gap10"><div class="row gap6"><span class="star-tok" style="font-size:12px;">✦</span><span class="star-tok" style="font-size:12px;">✦</span><span class="star-tok" style="font-size:12px;">✦</span></div><div class="hand-note" style="font-size:16px;">daily stars → spent on adventures</div></div>
+          <div class="hand-note" style="color:var(--line-soft); padding-left:6px;">↓</div>
+          <div class="row center gap10"><span class="star-tok" style="font-size:24px;">✦</span><div class="hand-note" style="font-size:16px;"><b>perfect week → 1 <i>bright</i> star</b></div></div>
+          <div class="hand-note" style="color:var(--line-soft); padding-left:6px;">↓</div>
+          <div class="row center gap10"><span class="star-tok" style="font-size:17px;">✦✦✦</span><div class="hand-note" style="font-size:16px;">full constellation (~12) → <b>the Big Dream</b> (a picture)</div></div>
+          <div class="hand-note" style="color:var(--gold); padding-left:6px;">↓ <span style="font-size:13px;">over months</span></div>
+          <div class="row center gap10"><span style="font-size:20px;">🌌</span><div class="hand-note" style="font-size:16px;"><b>galaxy</b> → every dream you’ve ever finished</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage" style="gap:32px 30px;">
+
+      <!-- Brick wall (current) -->
+      <div class="metaphor">
+        <div class="frame">
+          <div style="display:flex; flex-direction:column; gap:5px; width:200px;">
+            <div style="display:flex; gap:5px;"><div class="brk f" style="flex:1;"></div><div class="brk f" style="flex:1;"></div><div class="brk f" style="flex:1;"></div></div>
+            <div style="display:flex; gap:5px; margin-left:16px;"><div class="brk f" style="flex:1;"></div><div class="brk f" style="flex:1;"></div><div class="brk" style="flex:1;"></div></div>
+            <div style="display:flex; gap:5px;"><div class="brk f" style="flex:1;"></div><div class="brk" style="flex:1;"></div><div class="brk" style="flex:1;"></div></div>
+            <div style="display:flex; gap:5px; margin-left:16px;"><div class="brk" style="flex:1;"></div><div class="brk" style="flex:1;"></div><div class="brk" style="flex:1;"></div></div>
+          </div>
+        </div>
+        <div class="ttl">Brick wall <span class="k">— current</span></div>
+        <div class="conveys">Building something solid, brick by brick. Concrete, tactile, “we made this”.</div>
+        <div class="tradeoff">Bricks aren’t stars — slightly off-theme. Construction reads a touch utilitarian / boy-coded.</div>
+      </div>
+
+      <!-- Constellation (lead) -->
+      <div class="metaphor lead">
+        <div class="frame">
+          <div style="position:relative; width:240px; height:170px;">
+            <!-- connectors -->
+            <div style="position:absolute; left:40px; top:120px; width:80px; height:2px; background:var(--line-soft); opacity:.5; transform:rotate(-34deg); transform-origin:left;"></div>
+            <div style="position:absolute; left:118px; top:68px; width:70px; height:2px; background:var(--line-soft); opacity:.5; transform:rotate(34deg); transform-origin:left;"></div>
+            <div style="position:absolute; left:40px; top:120px; width:150px; height:2px; background:var(--line-soft); opacity:.5;"></div>
+            <div style="position:absolute; left:118px; top:30px; width:2px; height:40px; background:var(--line-soft); opacity:.5;"></div>
+            <!-- stars: earned gold, to-earn faint -->
+            <span class="sp" style="left:30px;  top:110px; font-size:22px;">✦</span>
+            <span class="sp" style="left:108px; top:18px;  font-size:26px;">✦</span>
+            <span class="sp" style="left:180px; top:110px; font-size:22px;">✦</span>
+            <span class="sp" style="left:72px;  top:92px;  font-size:16px;">✦</span>
+            <span class="sp" style="left:146px; top:92px;  font-size:16px;">✦</span>
+            <span class="sp" style="left:108px; top:60px;  font-size:14px;">✦</span>
+            <span class="sp f" style="left:60px;  top:128px; font-size:18px;">✦</span>
+            <span class="sp f" style="left:158px; top:128px; font-size:18px;">✦</span>
+            <span class="sp f" style="left:108px; top:120px; font-size:14px;">✦</span>
+          </div>
+        </div>
+        <div class="ttl">Constellation → galaxy</div>
+        <div class="conveys">Each perfect week is a bright star that joins the picture — and the picture <i>is</i> the dream (a tent for camp-out). Unifies the whole star system.</div>
+        <div class="tradeoff">The forming shape must stay legible at low completion. Reveal it softly as it fills.</div>
+      </div>
+
+      <!-- Growing tree -->
+      <div class="metaphor">
+        <div class="frame">
+          <div style="position:relative; width:200px; height:190px;">
+            <div style="position:absolute; left:92px; bottom:0; width:16px; height:70px; background:var(--paper-2); border:2px solid var(--line-soft); border-radius:4px;"></div>
+            <div class="rough" style="position:absolute; left:30px; top:6px; width:140px; height:120px; background:#fdfbf3;"></div>
+            <span class="sp" style="left:60px;  top:34px; font-size:20px;">✦</span>
+            <span class="sp" style="left:104px; top:24px; font-size:18px;">✦</span>
+            <span class="sp" style="left:128px; top:54px; font-size:20px;">✦</span>
+            <span class="sp" style="left:78px;  top:64px; font-size:16px;">✦</span>
+            <span class="sp f" style="left:46px;  top:74px; font-size:18px;">✦</span>
+            <span class="sp f" style="left:118px; top:88px; font-size:16px;">✦</span>
+            <span class="sp f" style="left:90px;  top:96px; font-size:14px;">✦</span>
+          </div>
+        </div>
+        <div class="ttl">Growing tree</div>
+        <div class="conveys">A living thing that grows with you — each week buds a new star-fruit. Warm, nurturing, calm.</div>
+        <div class="tradeoff">Growth feels passive &amp; slow; harder to tie to a specific anchor event / date.</div>
+      </div>
+
+      <!-- Galaxy spiral -->
+      <div class="metaphor">
+        <div class="frame">
+          <div style="position:relative; width:200px; height:190px;">
+            <span class="sp" style="left:92px;  top:86px; font-size:24px;">✦</span>
+            <span class="sp" style="left:118px; top:78px; font-size:14px;">✦</span>
+            <span class="sp" style="left:120px; top:104px; font-size:16px;">✦</span>
+            <span class="sp" style="left:96px;  top:118px; font-size:14px;">✦</span>
+            <span class="sp" style="left:66px;  top:104px; font-size:16px;">✦</span>
+            <span class="sp" style="left:62px;  top:70px; font-size:14px;">✦</span>
+            <span class="sp f" style="left:150px; top:62px; font-size:18px;">✦</span>
+            <span class="sp f" style="left:148px; top:120px; font-size:14px;">✦</span>
+            <span class="sp f" style="left:96px;  top:150px; font-size:16px;">✦</span>
+            <span class="sp f" style="left:38px;  top:122px; font-size:14px;">✦</span>
+            <span class="sp f" style="left:34px;  top:56px; font-size:18px;">✦</span>
+            <span class="sp f" style="left:88px;  top:30px; font-size:14px;">✦</span>
+          </div>
+        </div>
+        <div class="ttl">Galaxy spiral</div>
+        <div class="conveys">Stars spiral outward from a bright core — the family’s whole history of dreams in one growing galaxy. Epic, scalable across many dreams.</div>
+        <div class="tradeoff">Abstract — “how close am I?” is fuzzy. Best as the <i>all-time</i> view above per-dream containers.</div>
+      </div>
+
+      <!-- Rocket journey -->
+      <div class="metaphor">
+        <div class="frame">
+          <div style="position:relative; width:230px; height:175px;">
+            <div style="position:absolute; left:18px; bottom:14px; width:34px; height:34px; border:2px solid var(--line-soft); border-radius:50%; background:var(--paper-2);"></div>
+            <div style="position:absolute; right:8px; top:8px; width:48px; height:48px; border:2px solid var(--gold); border-radius:50%; background:#fffdf3; display:flex; align-items:center; justify-content:center; font-family:var(--note); font-size:13px; color:var(--ink-soft);">camp</div>
+            <!-- dotted path -->
+            <div style="position:absolute; left:46px; top:128px; width:150px; height:2px; background:repeating-linear-gradient(90deg,var(--line-soft) 0 6px,transparent 6px 12px); transform:rotate(-38deg); transform-origin:left; opacity:.6;"></div>
+            <span class="sp" style="left:70px;  top:108px; font-size:18px;">✦</span>
+            <span class="sp" style="left:104px; top:82px;  font-size:18px;">✦</span>
+            <span class="sp" style="left:128px; top:64px;  font-size:18px;">✦</span>
+            <span class="sp f" style="left:152px; top:46px; font-size:16px;">✦</span>
+            <span class="sp f" style="left:174px; top:30px; font-size:14px;">✦</span>
+            <div style="position:absolute; left:120px; top:70px; font-family:var(--note); font-size:15px; color:var(--accent);">🚀 here</div>
+          </div>
+        </div>
+        <div class="ttl">Rocket journey</div>
+        <div class="conveys">A trip toward the anchor event — each week is one hop closer to the destination (the camp-out). Excellent for event-dated dreams.</div>
+        <div class="tradeoff">A path implies a finish line / “race” — guard against it feeling like falling behind.</div>
+      </div>
+
+      <div style="flex-basis:100%; height:0;"></div>
+      <div class="annot-stack" style="max-width:780px; padding-top:6px;">
+        <h4>My read</h4>
+        <div class="annot"><b>Constellation → galaxy</b> is the natural winner: the app is literally StarqueZZ, so the long-term container being <i>made of stars</i> unifies daily / weekly / lifetime into one language — small star, big star, picture, galaxy. The forming image carries the anticipation.</div>
+        <div class="annot"><b>Brick</b> stays the strongest runner-up for its sheer tactility — great for younger kids who love building.</div>
+        <div class="annot">These aren’t exclusive: the <b>galaxy</b> could be the all-time “every dream we’ve ever chased” wall, while each <i>active</i> dream uses a <b>constellation</b> (or a brick/rocket the family picks). Container could even be a per-dream choice in setup.</div>
+        <div class="annot emph">Whatever we pick: the weekly token landing must be a <b>distinct, weightier beat</b> than a daily star — earned in the Sunday ceremony, never mid-week.</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">StarqueZZ · low-fi wireframes · structure &amp; flow only — visual direction proposals come next</footer>
+
+<script>
+  const views = Array.from(document.querySelectorAll('.view'));
+  const tabsEl = document.getElementById('tabs');
+  views.forEach((v, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i === 0 ? ' active' : '');
+    btn.innerHTML = '<span class="num">' + v.dataset.num + '</span>' + v.dataset.tab;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      views.forEach(x => x.classList.remove('active'));
+      btn.classList.add('active');
+      v.classList.add('active');
+      window.scrollTo({top:0, behavior:'instant'});
+      localStorage.setItem('sqz_wf_tab', i);
+    });
+    tabsEl.appendChild(btn);
+  });
+  views[0].classList.add('active');
+  // restore last tab
+  const saved = parseInt(localStorage.getItem('sqz_wf_tab') || '0', 10);
+  if (saved && views[saved]) {
+    document.querySelectorAll('.tab')[saved].click();
+  }
+</script>
+</body>
+</html>

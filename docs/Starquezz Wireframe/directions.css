@@ -1,0 +1,212 @@
+/* directions.css — visual styling for the 3 StarqueZZ hi-fi directions.
+   Scoped under .dir-sb (Storybook), .dir-cz (Cosmic), .dir-tb (Toybox). */
+
+/* ---------- shared phone screen shell ---------- */
+.scr{
+  width:320px; height:680px; border-radius:34px; overflow:hidden;
+  position:relative; display:flex; flex-direction:column;
+  font-family:var(--body); color:var(--ink);
+}
+.scr *{box-sizing:border-box;}
+.statusbar{
+  height:34px; flex:0 0 auto; display:flex; align-items:center;
+  justify-content:space-between; padding:0 20px; font-size:13px;
+  font-weight:600; font-family:var(--body); opacity:.85;
+}
+.statusbar .dots{display:flex; gap:4px; align-items:center;}
+.statusbar .dots b{display:inline-block; width:15px; height:9px; border-radius:2px; border:1.5px solid currentColor;}
+.scr-body{flex:1; min-height:0; display:flex; flex-direction:column; padding:6px 18px 18px;}
+
+.disp{font-family:var(--disp);}
+.row{display:flex; align-items:center;}
+.col{display:flex; flex-direction:column;}
+.between{justify-content:space-between;}
+.center{align-items:center; justify-content:center;}
+.grow{flex:1;}
+.gap6{gap:6px;}.gap8{gap:8px;}.gap10{gap:10px;}.gap12{gap:12px;}
+
+/* greeting + pills (shared structure) */
+.topbar{display:flex; align-items:center; gap:11px; padding:8px 2px 14px;}
+.avatar{
+  width:46px; height:46px; border-radius:50%; flex:0 0 auto;
+  background-size:cover; background-position:center;
+}
+.greet{display:flex; flex-direction:column; line-height:1.05;}
+.greet .hi{font-size:13px; opacity:.7;}
+.greet .nm{font-family:var(--disp); font-size:21px; font-weight:700;}
+.pill{
+  display:inline-flex; align-items:center; gap:5px; font-family:var(--disp);
+  font-weight:700; font-size:15px; padding:6px 11px; border-radius:999px;
+}
+
+/* block switcher */
+.blockbar{display:flex; align-items:center; justify-content:space-between; padding:2px 2px 12px;}
+.blockbar .bname{font-family:var(--disp); font-weight:700; font-size:18px; display:flex; align-items:center; gap:7px;}
+.blockbar .nav{display:flex; gap:7px;}
+.blockbar .nav span{width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; cursor:default;}
+
+/* habit list */
+.habits{display:flex; flex-direction:column; gap:11px;}
+.habit{
+  display:flex; align-items:center; gap:13px; padding:13px 14px;
+  border-radius:18px; position:relative;
+}
+.habit .hicon{width:44px; height:44px; border-radius:13px; flex:0 0 auto;
+  display:flex; align-items:center; justify-content:center;}
+.habit .hbody{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+.habit .hname{font-family:var(--disp); font-weight:600; font-size:16.5px;}
+.habit .hsub{font-size:12.5px; opacity:.7; display:flex; align-items:center; gap:4px;}
+.habit .hcheck{width:32px; height:32px; border-radius:50%; flex:0 0 auto;
+  display:flex; align-items:center; justify-content:center;}
+.habit.locked .hbody{opacity:.85;}
+.lockpill{position:absolute; top:-9px; right:14px; font-size:11px; font-weight:700;
+  padding:2px 9px; border-radius:999px; display:flex; align-items:center; gap:4px;}
+
+/* dream screen */
+.dreamhead{padding:6px 2px 2px;}
+.dreamhead .eyebrow{font-size:12px; letter-spacing:.12em; text-transform:uppercase; opacity:.65; font-weight:700;}
+.dreamhead .dname{font-family:var(--disp); font-weight:700; font-size:24px; display:flex; align-items:center; gap:8px;}
+.constel-wrap{position:relative; display:flex; align-items:center; justify-content:center; padding:6px 0;}
+.progress-line{display:flex; align-items:center; gap:8px; font-size:13.5px;}
+.progress-track{flex:1; height:8px; border-radius:999px; overflow:hidden;}
+.progress-fill{height:100%; border-radius:999px;}
+.pledge{border-radius:16px; padding:13px 15px; font-size:13.5px; line-height:1.4;}
+.galaxy-foot{display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:16px; font-size:13px;}
+.galaxy-foot .gdots{display:flex; gap:5px;}
+.galaxy-foot .gdots i{width:9px; height:9px; border-radius:50%; display:block;}
+
+/* ============================================================= */
+/* A · STORYBOOK — hand-painted warmth                            */
+/* ============================================================= */
+.dir-sb{
+  --bg:#F1E6D0; --card:#FFFBF838; --ink:#46382A; --muted:#8C7355;
+  --terra:#C56038; --sage:#7E9A66; --gold:#E29B33; --line:#E0CFB0;
+  --disp:'Grandstander'; --body:'Nunito Sans';
+}
+.dir-sb.scr{
+  background:
+    radial-gradient(circle at 18% 12%, #FBF3E2 0, transparent 42%),
+    radial-gradient(circle at 84% 78%, #F6E9CF 0, transparent 46%),
+    #F1E6D0;
+}
+.dir-sb.scr::before{
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.5;
+  background-image:radial-gradient(rgba(120,90,50,.07) 1px, transparent 1.4px);
+  background-size:7px 7px;
+}
+.dir-sb .statusbar{color:#6B5740;}
+.dir-sb .greet .nm{color:#3C2F22;}
+.dir-sb .pill{background:#FFFCF6; color:#7A5A2E; box-shadow:0 2px 0 rgba(120,90,50,.12), inset 0 0 0 1.5px #EAD9B8;}
+.dir-sb .pill.flame{color:#C56038;}
+.dir-sb .blockbar .bname{color:#3C2F22;}
+.dir-sb .blockbar .nav span{background:#FFFCF6; color:#9C7A48; box-shadow:inset 0 0 0 1.5px #EAD9B8;}
+.dir-sb .habit{background:#FFFCF6; box-shadow:0 3px 0 rgba(120,90,50,.10), inset 0 0 0 1.5px #ECDCBE;}
+.dir-sb .habit .hicon{background:#F4E7CE; color:#B27636;}
+.dir-sb .habit.now{box-shadow:0 4px 0 rgba(197,96,56,.22), inset 0 0 0 2px #C56038;}
+.dir-sb .habit .hcheck{box-shadow:inset 0 0 0 2px #D8BE8E; color:transparent;}
+.dir-sb .habit.done{background:#F3EAD7;}
+.dir-sb .habit.done .hcheck{background:#E29B33; box-shadow:none; color:#fff;}
+.dir-sb .habit.done .hname{color:#8C7355; text-decoration:line-through; text-decoration-color:#D6BE92;}
+.dir-sb .habit.locked{background:#F1E8D6; box-shadow:inset 0 0 0 1.5px #E0CFB0; border:1.5px dashed #D6BE92;}
+.dir-sb .habit.locked .hicon{background:#EADDC4; color:#B79E72;}
+.dir-sb .lockpill{background:#C56038; color:#fff;}
+.dir-sb .dreamhead .eyebrow{color:#B27636;}
+.dir-sb .dreamhead .dname{color:#3C2F22;}
+.dir-sb .constel-wrap{background:#FFFCF6; border-radius:22px; box-shadow:inset 0 0 0 1.5px #ECDCBE, 0 3px 0 rgba(120,90,50,.10); margin:4px 0 14px;}
+.dir-sb .progress-track{background:#EADDC4;}
+.dir-sb .progress-fill{background:#E29B33;}
+.dir-sb .pledge{background:#F4E7CE; color:#6B5740; box-shadow:inset 0 0 0 1.5px #E6D4B2;}
+.dir-sb .galaxy-foot{background:#FFFCF6; box-shadow:inset 0 0 0 1.5px #ECDCBE; color:#8C7355;}
+
+/* ============================================================= */
+/* B · COSMIC — deep night sky, glowing, mascot                   */
+/* ============================================================= */
+.dir-cz{
+  --ink:#EAF0FF; --muted:#97A2D4; --gold:#FFD66B; --cyan:#7FE3FF; --pink:#FF7DBE;
+  --card:rgba(255,255,255,.06); --line:rgba(180,196,255,.30);
+  --disp:'Fredoka'; --body:'Mulish';
+}
+.dir-cz.scr{
+  background:
+    radial-gradient(120% 80% at 50% -10%, #25306B 0, #141A44 45%, #0C1030 100%);
+}
+.dir-cz.scr::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:
+    radial-gradient(1.4px 1.4px at 20% 22%, #fff 50%, transparent),
+    radial-gradient(1.2px 1.2px at 68% 14%, #cfe0ff 50%, transparent),
+    radial-gradient(1px 1px at 42% 40%, #fff 50%, transparent),
+    radial-gradient(1.5px 1.5px at 82% 52%, #bcd2ff 50%, transparent),
+    radial-gradient(1px 1px at 12% 64%, #fff 50%, transparent),
+    radial-gradient(1.3px 1.3px at 90% 82%, #fff 50%, transparent),
+    radial-gradient(1px 1px at 30% 88%, #cfe0ff 50%, transparent);
+  opacity:.8;
+}
+.dir-cz .statusbar{color:#C7D2FF;}
+.dir-cz .greet .hi{color:#97A2D4;}
+.dir-cz .greet .nm{color:#fff;}
+.dir-cz .pill{background:rgba(255,255,255,.08); color:#FFE49C; box-shadow:inset 0 0 0 1px rgba(255,214,107,.4), 0 0 14px rgba(255,214,107,.16);}
+.dir-cz .pill.flame{color:#FFB27D; box-shadow:inset 0 0 0 1px rgba(255,150,90,.4), 0 0 14px rgba(255,150,90,.14);}
+.dir-cz .blockbar .bname{color:#fff;}
+.dir-cz .blockbar .nav span{background:rgba(255,255,255,.07); color:#C7D2FF; box-shadow:inset 0 0 0 1px rgba(180,196,255,.25);}
+.dir-cz .habit{background:rgba(255,255,255,.055); box-shadow:inset 0 0 0 1px rgba(180,196,255,.16); backdrop-filter:blur(2px);}
+.dir-cz .habit .hicon{background:rgba(127,227,255,.14); color:#9FECFF;}
+.dir-cz .habit.now{box-shadow:inset 0 0 0 1.5px rgba(255,214,107,.65), 0 0 22px rgba(255,214,107,.22); background:rgba(255,214,107,.07);}
+.dir-cz .habit.now .hicon{background:rgba(255,214,107,.18); color:#FFE49C;}
+.dir-cz .habit .hcheck{box-shadow:inset 0 0 0 2px rgba(180,196,255,.4); color:transparent;}
+.dir-cz .habit.done{background:rgba(255,255,255,.03);}
+.dir-cz .habit.done .hcheck{background:#FFD66B; box-shadow:0 0 14px rgba(255,214,107,.5); color:#241A03;}
+.dir-cz .habit.done .hname{color:#97A2D4;}
+.dir-cz .habit.locked{box-shadow:inset 0 0 0 1px rgba(180,196,255,.16); border:1.5px dashed rgba(180,196,255,.3); background:rgba(255,255,255,.02);}
+.dir-cz .habit.locked .hicon{background:rgba(180,196,255,.08); color:#7A86BC;}
+.dir-cz .lockpill{background:rgba(255,125,190,.2); color:#FFAED7; box-shadow:inset 0 0 0 1px rgba(255,125,190,.4);}
+.dir-cz .dreamhead .eyebrow{color:#9FECFF;}
+.dir-cz .dreamhead .dname{color:#fff;}
+.dir-cz .constel-wrap{margin:2px 0 12px;}
+.dir-cz .progress-track{background:rgba(255,255,255,.10);}
+.dir-cz .progress-fill{background:linear-gradient(90deg,#FFD66B,#FF7DBE);}
+.dir-cz .pledge{background:rgba(255,255,255,.05); color:#C7D2FF; box-shadow:inset 0 0 0 1px rgba(180,196,255,.18);}
+.dir-cz .galaxy-foot{background:rgba(255,255,255,.05); color:#C7D2FF; box-shadow:inset 0 0 0 1px rgba(180,196,255,.18);}
+
+/* mascot Zee */
+.zee{position:relative; display:inline-block;}
+.zee .zzz{position:absolute; top:-6px; right:-12px; font-family:var(--disp); font-weight:700; color:#9FECFF; font-size:12px; opacity:.85;}
+
+/* ============================================================= */
+/* C · TOYBOX — chunky cartoon + tactile claymation softness      */
+/* ============================================================= */
+.dir-tb{
+  --bg:#FFF3DE; --card:#FFFFFF; --ink:#26273E; --muted:#82839C;
+  --blue:#37A7F0; --yellow:#FFC23D; --coral:#FF6B5E; --mint:#34C79A; --gold:#FFB327;
+  --line:#26273E; --disp:'Baloo 2'; --body:'Nunito';
+}
+.dir-tb.scr{ background:#FFF3DE; }
+.dir-tb .statusbar{color:#26273E;}
+.dir-tb .topbar{background:#37A7F0; margin:-6px -18px 14px; padding:14px 18px 16px; border-bottom:4px solid #26273E;}
+.dir-tb .greet .hi{color:#E8F4FF;}
+.dir-tb .greet .nm{color:#fff;}
+.dir-tb .topbar .avatar{box-shadow:0 0 0 3px #fff, 0 0 0 6px #26273E;}
+.dir-tb .pill{background:#fff; color:#26273E; border:2.5px solid #26273E; box-shadow:0 3px 0 #26273E;}
+.dir-tb .pill.flame{color:#FF6B5E;}
+.dir-tb .blockbar .bname{color:#26273E;}
+.dir-tb .blockbar .nav span{background:#FFC23D; color:#26273E; border:2.5px solid #26273E; box-shadow:0 2px 0 #26273E;}
+.dir-tb .habit{background:#fff; border:3px solid #26273E; box-shadow:0 4px 0 #26273E;}
+.dir-tb .habit .hicon{background:#FFE6A6; color:#26273E; border:2.5px solid #26273E; border-radius:14px;}
+.dir-tb .habit.now{background:#FFF7E4;}
+.dir-tb .habit.now .hicon{background:#FFC23D;}
+.dir-tb .habit .hcheck{border:2.5px solid #26273E; color:transparent;}
+.dir-tb .habit.done{background:#EFFaF4;}
+.dir-tb .habit.done .hcheck{background:#34C79A; color:#fff;}
+.dir-tb .habit.done .hname{color:#82839C; text-decoration:line-through; text-decoration-color:#C7C8D6;}
+.dir-tb .habit.locked{background:#F3F1EA; border:3px dashed #B9BAC8; box-shadow:0 4px 0 #D8D9E3;}
+.dir-tb .habit.locked .hicon{background:#E6E6EE; border-color:#B9BAC8; color:#9A9BAE;}
+.dir-tb .lockpill{background:#FF6B5E; color:#fff; border:2px solid #26273E;}
+.dir-tb .dreamhead{margin-top:2px;}
+.dir-tb .dreamhead .eyebrow{color:#37A7F0;}
+.dir-tb .dreamhead .dname{color:#26273E;}
+.dir-tb .constel-wrap{background:#26273E; border-radius:22px; border:3px solid #26273E; box-shadow:0 4px 0 #26273E; margin:6px 0 14px;}
+.dir-tb .progress-track{background:#EDE9DD; border:2px solid #26273E;}
+.dir-tb .progress-fill{background:#FFC23D;}
+.dir-tb .pledge{background:#fff; color:#52536A; border:2.5px solid #26273E; box-shadow:0 3px 0 #26273E;}
+.dir-tb .galaxy-foot{background:#34C79A; color:#08271C; border:2.5px solid #26273E; box-shadow:0 3px 0 #26273E; font-weight:700;}
+.dir-tb .galaxy-foot .gdots i{box-shadow:inset 0 0 0 1.5px #08271C;}
