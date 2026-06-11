@@ -6,6 +6,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const MODEL = 'claude-haiku-4-5-20251001'
+const OPENROUTER_MODEL = 'anthropic/claude-haiku-4.5'
 const MAX_SESSIONS_PER_DAY = 10
 
 const SYSTEM = `You are the Scout, the setup assistant inside StarqueZZ — a free, kid-run habit app where star tokens buy shared family adventures, never toys or money.
@@ -89,8 +90,10 @@ Deno.serve(async (req) => {
     new Response(JSON.stringify({ error }), { status, headers })
 
   try {
-    const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
-    if (!apiKey) return fail(503, 'scout_unavailable')
+    // direct Anthropic key, or an OpenRouter key (same Claude model behind it)
+    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
+    const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
+    if (!anthropicKey && !openrouterKey) return fail(503, 'scout_unavailable')
 
     // authenticated parents only
     const supa = createClient(
@@ -125,33 +128,62 @@ Deno.serve(async (req) => {
       .map((m: { who: string; text: string }) => `${m.who === 'me' ? 'Parent' : 'Scout'}: ${String(m.text).slice(0, 600)}`)
       .join('\n')
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 1500,
-        system: SYSTEM,
-        tools: [tool],
-        tool_choice: { type: 'tool', name: tool.name },
-        messages: [
-          {
-            role: 'user',
-            content: `Child profile: age ${Number(profile?.age) || 'unknown'}${profile?.name ? `, called ${String(profile.name).slice(0, 30)}` : ''}${profile?.interests ? `, into: ${String(profile.interests).slice(0, 200)}` : ''}.\n\nConversation so far:\n${convo}\n\nPropose ${kind} now.`,
-          },
-        ],
-      }),
-    })
-    if (!res.ok) return fail(502, 'llm_error')
-    const body = await res.json()
-    const toolUse = body.content?.find((c: { type: string }) => c.type === 'tool_use')
-    if (!toolUse?.input) return fail(502, 'no_proposal')
+    const userPrompt = `Child profile: age ${Number(profile?.age) || 'unknown'}${profile?.name ? `, called ${String(profile.name).slice(0, 30)}` : ''}${profile?.interests ? `, into: ${String(profile.interests).slice(0, 200)}` : ''}.\n\nConversation so far:\n${convo}\n\nPropose ${kind} now.`
 
-    return new Response(JSON.stringify(toolUse.input), { headers })
+    let proposal: unknown
+    if (anthropicKey) {
+      // native Anthropic API, structured output via tool use
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          max_tokens: 1500,
+          system: SYSTEM,
+          tools: [tool],
+          tool_choice: { type: 'tool', name: tool.name },
+          messages: [{ role: 'user', content: userPrompt }],
+        }),
+      })
+      if (!res.ok) return fail(502, 'llm_error')
+      const body = await res.json()
+      const toolUse = body.content?.find((c: { type: string }) => c.type === 'tool_use')
+      proposal = toolUse?.input
+    } else {
+      // OpenRouter (OpenAI-compatible), same Claude model behind it
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${openrouterKey}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: OPENROUTER_MODEL,
+          max_tokens: 1500,
+          messages: [
+            { role: 'system', content: SYSTEM },
+            { role: 'user', content: userPrompt },
+          ],
+          tools: [{ type: 'function', function: { name: tool.name, description: tool.description, parameters: tool.input_schema } }],
+          tool_choice: { type: 'function', function: { name: tool.name } },
+        }),
+      })
+      if (!res.ok) return fail(502, 'llm_error')
+      const body = await res.json()
+      const args = body.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments
+      try {
+        proposal = typeof args === 'string' ? JSON.parse(args) : args
+      } catch {
+        proposal = undefined
+      }
+    }
+
+    if (!proposal) return fail(502, 'no_proposal')
+    return new Response(JSON.stringify(proposal), { headers })
   } catch {
     return fail(500, 'scout_error')
   }
