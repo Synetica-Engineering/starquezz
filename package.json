@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "StarqueZZ v2 — gamified habit routine + experience rewards. Free forever.",
+  "description": "StarqueZZ v2 \u2014 gamified habit routine + experience rewards. Free forever.",
   "packageManager": "pnpm@10.32.1",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,8 @@
     "test:all": "vitest run",
     "test:e2e": "playwright test",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > src/lib/database.types.ts"
+    "db:types": "supabase gen types typescript --local > src/lib/database.types.ts",
+    "functions:serve": "supabase functions serve --env-file supabase/functions/.env"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.1",
