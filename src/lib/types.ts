@@ -16,6 +16,7 @@ export interface Child {
   parent_id: string
   name: string
   avatar: string
+  photo: string | null
   secret_code_hash: string | null
   star_balance: number
   birth_year: number | null

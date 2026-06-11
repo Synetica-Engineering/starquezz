@@ -51,7 +51,7 @@ export function ScoutRerun() {
                 style={{ border: 'none', cursor: 'pointer', textAlign: 'left' }}
                 onClick={() => setChild(c)}
               >
-                <KidAvatar avatar={c.avatar} size={40} />
+                <KidAvatar avatar={c.avatar} photo={c.photo} size={40} />
                 <span className="col grow">
                   <span className="pr-name">{c.name}</span>
                   <span className="pr-sub">{habitCount} active habits</span>

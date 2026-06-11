@@ -88,7 +88,7 @@ export function KidShell({ onParent }: { onParent: () => void }) {
           {fam.children.map((c) => (
             <button key={c.id} className={'face-pick' + (waving === c.id ? ' waving' : '')} onClick={() => pickChild(c)}>
               <div className="ring">
-                <KidAvatar avatar={c.avatar} size={108} />
+                <KidAvatar avatar={c.avatar} photo={c.photo} size={108} />
               </div>
               <div className="pn">{c.name}</div>
             </button>
@@ -115,7 +115,7 @@ export function KidShell({ onParent }: { onParent: () => void }) {
               background: 'linear-gradient(150deg,rgba(141,235,255,.6),rgba(255,135,196,.5))',
             }}
           >
-            <KidAvatar avatar={pendingChild.avatar} size={84} />
+            <KidAvatar avatar={pendingChild.avatar} photo={pendingChild.photo} size={84} />
           </div>
           <div className="disp" style={{ fontSize: 20, color: '#fff', whiteSpace: 'nowrap' }}>
             {pendingChild.name}’s secret code
@@ -193,7 +193,7 @@ function TopBar({
   return (
     <div className="topbar">
       <button className="avatar-btn" onClick={onAvatar} aria-label="switch kid">
-        <KidAvatar avatar={child.avatar} size={48} style={{ boxShadow: '0 0 0 2px rgba(141,235,255,.5)' }} />
+        <KidAvatar avatar={child.avatar} photo={child.photo} size={48} style={{ boxShadow: '0 0 0 2px rgba(141,235,255,.5)' }} />
       </button>
       <div className="greet grow">
         <span className="hi">{hi}</span>

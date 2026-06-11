@@ -114,7 +114,7 @@ export function DreamEditor() {
       ) : (
         <div className="col gap12">
           <div className="pcard col center gap10 tac" style={{ padding: 26 }}>
-            <KidAvatar avatar={child.avatar} size={48} />
+            <KidAvatar avatar={child.avatar} photo={child.photo} size={48} />
             <span className="dname2" style={{ fontFamily: 'var(--disp)', fontWeight: 700, fontSize: 17, color: '#fff' }}>
               No dream in the sky right now
             </span>

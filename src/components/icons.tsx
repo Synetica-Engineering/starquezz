@@ -236,35 +236,30 @@ export function Constellation({
   )
 }
 
-// ---- illustrated kid avatars (6 presets) ----
-export const AVATARS: Record<string, { bg: string; skin: string; hair: string }> = {
-  'star-1': { bg: '#34428A', skin: '#E6AE82', hair: '#2A2240' },
-  'star-2': { bg: '#7A3A6A', skin: '#F0C49A', hair: '#3A2030' },
-  'star-3': { bg: '#1F6A5A', skin: '#C98A5E', hair: '#1A1208' },
-  'star-4': { bg: '#8A5A24', skin: '#F2CFA6', hair: '#6E3A1A' },
-  'star-5': { bg: '#4A3A8A', skin: '#A86B42', hair: '#0E0A06' },
-  'star-6': { bg: '#23597D', skin: '#EFC096', hair: '#4A2A10' },
-}
+// ---- kid avatar: a parent-uploaded photo wins over the animal face ----
+import { AnimalFace } from './animals'
 
 export function KidAvatar({
-  avatar = 'star-1',
+  avatar = 'cat',
+  photo = null,
   size = 46,
   style = {},
 }: {
   avatar?: string
+  photo?: string | null
   size?: number
   style?: CSSProperties
 }) {
-  const a = AVATARS[avatar] ?? AVATARS['star-1']
-  return (
-    <svg width={size} height={size} viewBox="0 0 48 48" style={{ borderRadius: '50%', display: 'block', ...style }} aria-hidden>
-      <rect width="48" height="48" fill={a.bg} />
-      <circle cx="24" cy="44" r="15" fill={a.skin} />
-      <circle cx="24" cy="22" r="11" fill={a.skin} />
-      <path d="M13 21c0-8 5-12 11-12s11 4 11 12c0-2-3-3-4-4-2 2-12 2-14 0-1 1-4 2-4 4z" fill={a.hair} />
-      <circle cx="20" cy="22" r="1.5" fill="#3a2a1a" />
-      <circle cx="28" cy="22" r="1.5" fill="#3a2a1a" />
-      <path d="M21 26c1.6 1.4 4.4 1.4 6 0" stroke="#a86b4a" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-    </svg>
-  )
+  if (photo) {
+    return (
+      <img
+        src={photo}
+        width={size}
+        height={size}
+        alt=""
+        style={{ borderRadius: '50%', objectFit: 'cover', display: 'block', width: size, height: size, ...style }}
+      />
+    )
+  }
+  return <AnimalFace name={avatar} size={size} style={style} />
 }

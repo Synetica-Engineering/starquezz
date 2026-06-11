@@ -4,9 +4,10 @@
 import { useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useFamily } from '../../state/family'
-import { KidAvatar, AVATARS, SqzIcon, StarToken } from '../../components/icons'
+import { SqzIcon, StarToken } from '../../components/icons'
 import { Zee } from '../../components/Zee'
 import { Keypad } from '../../components/ui'
+import { AvatarPicker } from '../../components/AvatarPicker'
 import { ScoutChat } from './Scout'
 import type { TimeBlock } from '../../lib/types'
 
@@ -59,7 +60,8 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
   const [name, setName] = useState('')
   const [birthYear, setBirthYear] = useState(thisYear - 7)
   const [interests, setInterests] = useState('')
-  const [avatar, setAvatar] = useState('star-1')
+  const [avatar, setAvatar] = useState('cat')
+  const [photo, setPhoto] = useState<string | null>(null)
   const age = thisYear - birthYear
 
   const habitChoices = useMemo(() => HABIT_SEEDS.filter((h) => age >= (h.minAge ?? 0)), [age])
@@ -88,6 +90,7 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
         parent_id: fam.parent!.id,
         name: name.trim(),
         avatar,
+        photo,
         birth_year: birthYear,
         interests: interests
           .split(',')
@@ -323,18 +326,7 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
             </div>
             <div>
               <span className="field-label">Pick a face</span>
-              <div className="avatar-grid">
-                {Object.keys(AVATARS).map((a) => (
-                  <button
-                    key={a}
-                    className={'avatar-pick' + (avatar === a ? ' on' : '')}
-                    onClick={() => setAvatar(a)}
-                    aria-label={`avatar ${a}`}
-                  >
-                    <KidAvatar avatar={a} size={56} />
-                  </button>
-                ))}
-              </div>
+              <AvatarPicker avatar={avatar} photo={photo} onAvatar={setAvatar} onPhoto={setPhoto} />
             </div>
           </div>
           <div style={{ marginTop: 'auto', paddingTop: 16 }}>

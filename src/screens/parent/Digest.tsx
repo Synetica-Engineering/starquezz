@@ -43,7 +43,7 @@ export function Digest({ onExit }: { onExit: () => void }) {
             <div className="dchild" key={k.id}>
               <div className="dc-h">
                 <span className="row gap8">
-                  <KidAvatar avatar={k.avatar} size={26} />
+                  <KidAvatar avatar={k.avatar} photo={k.photo} size={26} />
                   <span className="dname2">{k.name}</span>
                 </span>
                 <span className="dstat">

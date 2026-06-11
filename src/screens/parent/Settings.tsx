@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { useFamily } from '../../state/family'
 import { KidAvatar, SqzIcon } from '../../components/icons'
 import { Keypad, Sheet, Toast, useToast } from '../../components/ui'
+import { AvatarPicker } from '../../components/AvatarPicker'
 import { isMuted, setMuted } from '../../lib/sound'
 import type { Child } from '../../lib/types'
 
@@ -15,6 +16,9 @@ export function Settings({ onAddChild }: { onAddChild: () => void }) {
   const [codeFor, setCodeFor] = useState<Child | null>(null)
   const [code, setCode] = useState('')
   const [adjustFor, setAdjustFor] = useState<Child | null>(null)
+  const [faceFor, setFaceFor] = useState<Child | null>(null)
+  const [faceAvatar, setFaceAvatar] = useState('cat')
+  const [facePhoto, setFacePhoto] = useState<string | null>(null)
   const [delta, setDelta] = useState(0)
   const [note, setNote] = useState('')
   const [pinSheet, setPinSheet] = useState(false)
@@ -40,6 +44,24 @@ export function Settings({ onAddChild }: { onAddChild: () => void }) {
   const clearCode = async (child: Child) => {
     await fam.setChildCode(child.id, null)
     showToast(`${child.name}’s code removed`)
+  }
+
+  const openFace = (child: Child) => {
+    setFaceAvatar(child.avatar)
+    setFacePhoto(child.photo)
+    setFaceFor(child)
+  }
+
+  const saveFace = async () => {
+    if (!faceFor) return
+    const { error } = await supabase
+      .from('children')
+      .update({ avatar: faceAvatar, photo: facePhoto })
+      .eq('id', faceFor.id)
+    if (error) return showToast('Could not save the face')
+    setFaceFor(null)
+    await fam.refresh()
+    showToast(`${faceFor.name}’s face updated`)
   }
 
   const saveAdjust = async () => {
@@ -72,7 +94,14 @@ export function Settings({ onAddChild }: { onAddChild: () => void }) {
           <div className="eyebrow">Kids</div>
           {fam.children.map((c) => (
             <div className="plist-row" key={c.id}>
-              <KidAvatar avatar={c.avatar} size={38} />
+              <button
+                className="avatar-btn"
+                onClick={() => openFace(c)}
+                aria-label={`change ${c.name}’s face or photo`}
+                title="Change face or photo"
+              >
+                <KidAvatar avatar={c.avatar} photo={c.photo} size={38} />
+              </button>
               <span className="col grow">
                 <span className="pr-name">{c.name}</span>
                 <span className="pr-sub">
@@ -179,6 +208,20 @@ export function Settings({ onAddChild }: { onAddChild: () => void }) {
             </p>
             <Keypad value={code} onChange={(v) => void saveCode(v)} />
           </div>
+        </Sheet>
+      )}
+
+      {faceFor && (
+        <Sheet onClose={() => setFaceFor(null)}>
+          <h3>{faceFor.name}’s face</h3>
+          <p className="muted" style={{ fontSize: 13, margin: '-6px 0 12px', lineHeight: 1.5 }}>
+            Pick an animal friend — or use a photo from your gallery. The photo stays inside your family’s
+            account, nowhere else.
+          </p>
+          <AvatarPicker avatar={faceAvatar} photo={facePhoto} onAvatar={setFaceAvatar} onPhoto={setFacePhoto} />
+          <button className="btn full" style={{ marginTop: 14 }} onClick={() => void saveFace()}>
+            Save {faceFor.name}’s face
+          </button>
         </Sheet>
       )}
 
