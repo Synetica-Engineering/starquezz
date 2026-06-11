@@ -47,7 +47,7 @@ export default defineConfig({
           },
         ],
       },
-      devOptions: { enabled: false },
+      devOptions: { enabled: true },
     }),
   ],
   server: { port: 5179, strictPort: true },

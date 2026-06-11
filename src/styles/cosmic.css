@@ -80,7 +80,8 @@ body {
 }
 @keyframes twinkle { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
 
-/* phones & small tablets: the app IS the screen — no frame, natural flow */
+/* phones & small tablets: the app IS the screen — no frame, natural flow.
+   (overrides that fight base rules live at the END of this file) */
 @media (max-width: 768px) {
   .stage { display: block; }
   .stage-inner { display: block; }
@@ -91,9 +92,6 @@ body {
   .phone::after { display: none; }
   .screen { border-radius: 0; }
   .screen::after { display: none; }
-  .statusbar { display: none; }
-  .view { padding-top: max(10px, env(safe-area-inset-top)); }
-  .bottomnav { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 }
 
 .statusbar {
@@ -636,6 +634,14 @@ textarea.input { resize: none; min-height: 76px; }
 .offline-bar {
   position: absolute; top: 0; left: 0; right: 0; z-index: 80; text-align: center;
   font-size: 12px; font-weight: 800; padding: 6px; color: #0b1030; background: #ffd66b;
+}
+
+/* mobile overrides of base components — must come after the base rules */
+@media (max-width: 768px) {
+  .statusbar { display: none; }
+  .view { padding-top: max(10px, env(safe-area-inset-top)); }
+  .bottomnav { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  .fxlayer { border-radius: 0; }
 }
 
 /* reduced motion: collapse all animation */
