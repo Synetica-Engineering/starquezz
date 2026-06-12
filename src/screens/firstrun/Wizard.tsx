@@ -291,7 +291,7 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
                 className="input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Zen"
+                placeholder="their name"
                 maxLength={24}
               />
             </div>

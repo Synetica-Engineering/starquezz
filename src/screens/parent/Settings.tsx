@@ -189,7 +189,7 @@ export function Settings({ onAddChild }: { onAddChild: () => void }) {
         <div className="muted tac" style={{ fontSize: 12, lineHeight: 1.6, paddingBottom: 8 }}>
           StarqueZZ is free for every family, forever.
           <br />
-          Built with ❤️ for Zen & Zia by Synetica.
+          Built with ❤️ by Synetica.
         </div>
       </div>
 
