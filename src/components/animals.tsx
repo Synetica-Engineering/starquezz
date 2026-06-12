@@ -1,4 +1,4 @@
-// 16 cute animal avatars — Finch-inspired, Cosmic-compatible. Same friendly
+// Cute animal avatars — Finch-inspired, Cosmic-compatible. Same friendly
 // grammar as Zee: round shapes, dot eyes, pink cheeks, nothing scary.
 // A kid photo (children.photo) always wins over the animal when set.
 import type { CSSProperties } from 'react'
@@ -27,6 +27,7 @@ export const ANIMALS: Record<string, Spec> = {
   pig:     { bg: '#4A6A3A', fur: '#F2B8C0', accent: '#E294A2', label: 'Pig' },
   chick:   { bg: '#5A4A8A', fur: '#F7D976', accent: '#F2A93C', label: 'Chick' },
   raccoon: { bg: '#6A4A2A', fur: '#A8A0B0', accent: '#3A3242', label: 'Raccoon' },
+  musang:  { bg: '#3F4F72', fur: '#A78A72', accent: '#4A3B3D', label: 'Musang' },
 }
 
 export const ANIMAL_KEYS = Object.keys(ANIMALS)
@@ -312,6 +313,27 @@ function animalArt(name: string): React.ReactNode {
           <ellipse cx="24" cy="32" rx="4.4" ry="3.2" fill="#E8E2EA" />
           <ellipse cx="24" cy="30.6" rx="1.7" ry="1.2" fill={EYE} />
           <path d="M22 33.2 c1.3 1.1 2.7 1.1 4 0" stroke={EYE} strokeWidth="1.3" fill="none" strokeLinecap="round" />
+        </g>
+      )
+    case 'musang':
+      return (
+        <g>
+          <path d="M13 20 L15 10 L21 15.2 Z" fill={s.fur} />
+          <path d="M35 20 L33 10 L27 15.2 Z" fill={s.fur} />
+          <path d="M14.8 17.4 L15.8 12.7 L19.2 15.5 Z" fill="#E6D2BE" opacity="0.68" />
+          <path d="M33.2 17.4 L32.2 12.7 L28.8 15.5 Z" fill="#E6D2BE" opacity="0.68" />
+          <Head s={s} r={13.8} />
+          <path d="M12.8 22.2 c4.4-4.6 18-4.6 22.4 0 c-2.9 2.9-7 4.4-11.2 4.4 s-8.3-1.5-11.2-4.4 Z" fill="#D9C5B1" opacity="0.9" />
+          <path d="M16 21.4 c1.8 2.4 3.6 4 6 4.6 M32 21.4 c-1.8 2.4-3.6 4-6 4.6" stroke={s.accent} strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.82" />
+          <ellipse cx="24" cy="31" rx="5.1" ry="3.7" fill="#E6D2BE" />
+          <ellipse cx="24" cy="29.6" rx="1.9" ry="1.35" fill={EYE} />
+          <path d="M24 30.9 v1.5 M24 32.3 c-1.1 1.1-2.3 1.1-3.4 0.3 M24 32.3 c1.1 1.1 2.3 1.1 3.4 0.3" stroke={EYE} strokeWidth="1.25" fill="none" strokeLinecap="round" />
+          <circle cx="18.5" cy="25.5" r="1.7" fill={EYE} />
+          <circle cx="29.5" cy="25.5" r="1.7" fill={EYE} />
+          <circle cx="19" cy="25" r="0.55" fill="#fff" />
+          <circle cx="30" cy="25" r="0.55" fill="#fff" />
+          <ellipse cx="15.5" cy="30.2" rx="2.3" ry="1.6" fill="#FF9ECB" opacity="0.42" />
+          <ellipse cx="32.5" cy="30.2" rx="2.3" ry="1.6" fill="#FF9ECB" opacity="0.42" />
         </g>
       )
     default:

@@ -16,7 +16,7 @@ const SLIDES = [
   },
   {
     Art: SceneTogether,
-    h: 'Stars buy adventures — together.',
+    h: 'Stars redeem adventures — together.',
     p: 'Bookshop trips, playgrounds, treasure hunts. Never toys or money. Stars decide which adventure — the adventure itself always happens.',
   },
 ]

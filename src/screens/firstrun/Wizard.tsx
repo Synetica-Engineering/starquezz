@@ -284,7 +284,7 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
           <div className="col gap12">
             <div>
               <label className="field-label" htmlFor="kidname">
-                Name
+                Name <span style={{ color: 'var(--pink)' }}>*</span>
               </label>
               <input
                 id="kidname"
@@ -330,6 +330,11 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
             </div>
           </div>
           <div style={{ marginTop: 'auto', paddingTop: 16 }}>
+            {!name.trim() && (
+              <div className="muted tac" style={{ fontSize: 13, marginBottom: 10 }}>
+                Add <b style={{ color: 'var(--pink)' }}>their name</b> to continue
+              </div>
+            )}
             <button className="btn full" disabled={!name.trim()} onClick={() => setStep('path')}>
               Next →
             </button>

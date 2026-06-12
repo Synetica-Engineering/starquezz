@@ -1,13 +1,21 @@
 // The Weekly Digest — the ONLY recurring parent surface. The whole week in
 // one glance, in and out in under two minutes. Every parent-side edit and
 // failed PIN attempt leaves a footprint here (tamper-evidence by design).
+import { useState } from 'react'
 import { useFamily, displayStreak, habitsForChild, scheduledOn, starDayComplete } from '../../state/family'
+import { useSession } from '../../state/session'
 import { formatDay, mondayOf, todayLocal, weekDates } from '../../lib/dates'
 import { SqzIcon, StarToken, KidAvatar } from '../../components/icons'
+import { ClaimAccountSheet } from '../../components/ClaimAccount'
+import { Toast, useToast } from '../../components/ui'
 import type { Child } from '../../lib/types'
 
 export function Digest({ onExit }: { onExit: () => void }) {
   const fam = useFamily()
+  const { session } = useSession()
+  const isGuest = session?.user.is_anonymous ?? false
+  const [claiming, setClaiming] = useState(false)
+  const [toast, showToast] = useToast()
   const today = todayLocal()
   const monday = mondayOf(today)
 
@@ -34,6 +42,20 @@ export function Digest({ onExit }: { onExit: () => void }) {
           kid mode →
         </button>
       </div>
+
+      {isGuest && (
+        <button
+          className="nudge-card"
+          style={{ border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', marginBottom: 12 }}
+          onClick={() => setClaiming(true)}
+        >
+          <SqzIcon name="sparkle" size={17} />
+          <span>
+            <b>Save your family with an email.</b> Without one, this family lives only on this device —
+            one tap to keep it safe.
+          </span>
+        </button>
+      )}
 
       <div className="col gap12">
         {fam.children.map((k) => {
@@ -114,6 +136,18 @@ export function Digest({ onExit }: { onExit: () => void }) {
       <div className="muted tac" style={{ fontSize: 12.5, marginTop: 16 }}>
         The whole week in one glance — in and out in two minutes.
       </div>
+
+      {claiming && (
+        <ClaimAccountSheet
+          onClose={() => setClaiming(false)}
+          onSaved={() => {
+            setClaiming(false)
+            void fam.refresh()
+            showToast('Family saved — sign in anywhere now ✦')
+          }}
+        />
+      )}
+      <Toast message={toast} />
     </div>
   )
 }

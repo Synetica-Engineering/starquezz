@@ -44,13 +44,28 @@ ceremony, sealed adventure tickets — while the parent gets the weekly digest.
 - **Streak display** is mirrored client-side for the flame; every award is
   computed only in SQL.
 
+## Guest mode (no signup wall)
+
+The app starts with **"Start now — no account needed"**: a Supabase anonymous
+session backs the family from the first tap — same RLS, same RPCs, no separate
+local store and no sync problem. "Save your family" (digest banner + Settings)
+attaches email+password to the *same* account via `auth.updateUser()`; nothing
+migrates. Guest sign-out is guarded with a loud "your family isn't saved"
+warning. Covered by `tests/integration/anonymous.test.ts` +
+`tests/e2e/guest-claim.spec.ts`.
+
 ## To deploy (not yet done)
 
 1. `supabase link` + `supabase db push` to a cloud project; deploy
-   `supabase/functions/scout` with `ANTHROPIC_API_KEY` secret.
-2. Vercel: build `pnpm build`, output `dist/`, env `VITE_SUPABASE_URL` +
+   `supabase/functions/scout` with `ANTHROPIC_API_KEY` (or
+   `OPENROUTER_API_KEY`) secret.
+2. Auth settings on the cloud project: enable **anonymous sign-ins** AND
+   captcha (anonymous endpoints are spammable); add a cleanup job for
+   anonymous users with no children after ~30 days.
+3. Vercel: build `pnpm build`, output `dist/`, env `VITE_SUPABASE_URL` +
    `VITE_SUPABASE_ANON_KEY`.
-3. Smoke-test signup + RLS on the cloud project before sharing the URL.
+4. Smoke-test guest → claim → sign-in + RLS on the cloud project before
+   sharing the URL.
 
 ## Known gaps / next
 

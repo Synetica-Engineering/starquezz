@@ -17,6 +17,7 @@ export interface DraftHabit {
   category: HabitCategory
   time_block: TimeBlock
   is_core: boolean
+  source: 'conversation' | 'age'
   why: string
   library_id?: string | null
 }
@@ -30,7 +31,7 @@ export interface DraftAdventure {
   library_id?: string | null
 }
 
-export type HabitRow = Omit<DraftHabit, 'why'>
+export type HabitRow = Omit<DraftHabit, 'why' | 'source'>
 export type AdvRow = Omit<DraftAdventure, 'why'>
 
 interface ChatMsg {
@@ -38,9 +39,34 @@ interface ChatMsg {
   text: string
 }
 
-type Phase = 'intakeHabits' | 'habits' | 'intakeAdvs' | 'adventures' | 'done'
+// chatHabits → (build) → habits cards → chatAdvs → (build) → adventures cards
+type Phase = 'chatHabits' | 'habits' | 'chatAdvs' | 'adventures'
+type ScoutMode = 'online' | 'offline' | null
 
 const TIER_COST: Record<number, number> = { 0: 0, 1: 20, 2: 40, 3: 80 }
+
+// Let the conversation run as long as it stays productive, but never past
+// this many parent answers — a hard backstop that keeps it under 10 questions
+// even if the model wants to keep going.
+const QUESTION_BUDGET = 9
+
+const habitOpener = (name: string) =>
+  `Tell me a little about ${name}'s day — which bits go smoothly, and which ones are a daily tug-of-war right now?`
+const advOpener = (name: string) =>
+  `Now the fun part — what does ${name} love doing with you? Parks, pools, bookshops, building forts… what lights them up?`
+
+// Warm scripted fallback (used when the LLM proxy is unavailable): still
+// acknowledges the first answer and digs once, then asks permission to build.
+function scriptedTurn(topic: 'habits' | 'adventures', answerNo: number, name: string): { reply: string; ready: boolean } {
+  if (topic === 'habits') {
+    if (answerNo === 1)
+      return { reply: `Wonderful — that gives me a real feel for ${name}'s day. What does ${name} already do without being asked?`, ready: false }
+    return { reply: `Lovely — that's plenty to start with. Want me to build ${name}'s habits now?`, ready: true }
+  }
+  if (answerNo === 1)
+    return { reply: `Oh, those are lovely. Any weekend limits I should design around — budget, time, travel? Or I can build the menu right now.`, ready: true }
+  return { reply: `Got it. Want me to build the adventure menu now?`, ready: true }
+}
 
 export function ScoutChat({
   childName,
@@ -59,15 +85,15 @@ export function ScoutChat({
 }) {
   const fam = useFamily()
   const name = childName || 'your kid'
-  const [phase, setPhase] = useState<Phase>('intakeHabits')
-  const [msgs, setMsgs] = useState<ChatMsg[]>([
-    {
-      who: 'bot',
-      text: `Hi! I’m the Scout — Zee’s backstage half. Tell me about ${name}: what do mornings and evenings look like, and what do you wish went smoother? What does ${name} already do without being asked?`,
-    },
-  ])
+  const [phase, setPhase] = useState<Phase>('chatHabits')
+  const [msgs, setMsgs] = useState<ChatMsg[]>([{ who: 'bot', text: habitOpener(name) }])
   const [input, setInput] = useState('')
   const [thinking, setThinking] = useState(false)
+  const [scoutMode, setScoutMode] = useState<ScoutMode>(null)
+  const [habitAnswers, setHabitAnswers] = useState(0)
+  const [advAnswers, setAdvAnswers] = useState(0)
+  const [readyHabits, setReadyHabits] = useState(false)
+  const [readyAdvs, setReadyAdvs] = useState(false)
   const [habitDrafts, setHabitDrafts] = useState<DraftHabit[]>([])
   const [advDrafts, setAdvDrafts] = useState<DraftAdventure[]>([])
   const [habitState, setHabitState] = useState<Record<number, 'accepted' | 'skipped'>>({})
@@ -75,11 +101,10 @@ export function ScoutChat({
   const [editing, setEditing] = useState<{ kind: 'habit' | 'adv'; idx: number } | null>(null)
   const [busy, setBusy] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const notesRef = useRef<string[]>([])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-  }, [msgs, habitDrafts, advDrafts, thinking])
+  }, [msgs, habitDrafts, advDrafts, thinking, readyHabits, readyAdvs])
 
   const profile = useMemo(
     () => ({ age, interests, name: childName || undefined }),
@@ -87,25 +112,25 @@ export function ScoutChat({
   )
 
   // ---- rule-based fallback, grounded in the curated libraries ----
+  // Offline can't read the conversation, so it can't tailor — it returns a
+  // balanced age-appropriate set, all tagged 'age'.
   const fallbackHabits = (): DraftHabit[] => {
     const coreTarget = age <= 5 ? 2 : age <= 7 ? 3 : 4
     const fits = fam.habitLibrary.filter((h) => age >= h.age_min && age <= h.age_max)
     const byCat = (cat: HabitCategory) => fits.filter((h) => h.category === cat)
-    const cores: DraftHabit[] = []
-    // spread across categories: body first (mornings), then space — never all-Space
-    const corePool = [...byCat('body').slice(0, 3), ...byCat('space').slice(0, 2)]
-    for (const h of corePool.slice(0, coreTarget)) {
-      cores.push({
-        name: h.name, icon: h.icon, category: h.category, time_block: h.suggested_block,
-        is_core: true, why: h.why_it_matters, library_id: h.id,
-      })
-    }
-    const bonusPool = [...byCat('mind').slice(0, 2), ...byCat('heart').slice(0, 1)]
-    const bonuses: DraftHabit[] = bonusPool.slice(0, 2).map((h) => ({
+    // spread across categories, body/space first for cores
+    const ordered = [
+      ...byCat('body'),
+      ...byCat('space'),
+      ...byCat('mind'),
+      ...byCat('heart'),
+    ]
+    const seen = new Set<string>()
+    const picked = ordered.filter((h) => (seen.has(h.id) ? false : (seen.add(h.id), true))).slice(0, 9)
+    return picked.map((h, i) => ({
       name: h.name, icon: h.icon, category: h.category, time_block: h.suggested_block,
-      is_core: false, why: h.why_it_matters, library_id: h.id,
+      is_core: i < coreTarget, source: 'age' as const, why: h.why_it_matters, library_id: h.id,
     }))
-    return [...cores, ...bonuses]
   }
 
   const fallbackAdventures = (): DraftAdventure[] => {
@@ -124,46 +149,59 @@ export function ScoutChat({
   }
 
   // ---- LLM proxy with graceful fallback ----
-  const invokeScout = async (kind: 'habits' | 'adventures', conversation: ChatMsg[]) => {
-    const { data, error } = await supabase.functions.invoke('scout', {
-      body: { kind, profile, conversation: conversation.slice(-8) },
-    })
+  const invokeScout = async (body: object) => {
+    const { data, error } = await supabase.functions.invoke('scout', { body: { profile, ...body } })
     if (error || !data) throw new Error(error?.message ?? 'no data')
     return data
   }
 
+  /** one conversational turn — warm ack + dig, or a permission-ask when ready */
+  const chatTurn = async (
+    conversation: ChatMsg[],
+    topic: 'habits' | 'adventures',
+  ): Promise<{ reply: string; ready: boolean }> => {
+    const data = await invokeScout({ kind: 'chat', topic, conversation: conversation.slice(-12) })
+    if (typeof data.reply !== 'string' || !data.reply.trim()) throw new Error('empty reply')
+    return { reply: String(data.reply).slice(0, 400), ready: Boolean(data.ready) }
+  }
+
   const proposeHabits = async (conversation: ChatMsg[]): Promise<DraftHabit[]> => {
     try {
-      const data = await invokeScout('habits', conversation)
+      const data = await invokeScout({ kind: 'habits', conversation: conversation.slice(-12) })
       if (Array.isArray(data.habits) && data.habits.length > 0) {
+        setScoutMode('online')
         return resolveHabitDrafts(data.habits as DraftHabit[])
       }
       throw new Error('empty proposal')
     } catch {
+      setScoutMode('offline')
       return fallbackHabits()
     }
   }
 
   const proposeAdvs = async (conversation: ChatMsg[]): Promise<DraftAdventure[]> => {
     try {
-      const data = await invokeScout('adventures', conversation)
+      const data = await invokeScout({ kind: 'adventures', conversation: conversation.slice(-12) })
       if (Array.isArray(data.adventures) && data.adventures.length > 0) {
+        setScoutMode('online')
         return resolveAdvDrafts(data.adventures as DraftAdventure[])
       }
       throw new Error('empty proposal')
     } catch {
+      setScoutMode('offline')
       return fallbackAdventures()
     }
   }
 
   /** drafts must be schema-valid: clamp anything the model got creative with */
   const resolveHabitDrafts = (raw: DraftHabit[]): DraftHabit[] =>
-    raw.slice(0, 7).map((h) => ({
+    raw.slice(0, 9).map((h) => ({
       name: String(h.name).slice(0, 60),
       icon: typeof h.icon === 'string' && h.icon ? h.icon : 'check',
       category: (['body', 'mind', 'space', 'heart'] as const).includes(h.category) ? h.category : 'body',
       time_block: (['morning', 'afternoon', 'evening'] as const).includes(h.time_block) ? h.time_block : 'morning',
       is_core: Boolean(h.is_core),
+      source: h.source === 'conversation' ? 'conversation' : 'age',
       why: String(h.why ?? '').slice(0, 240),
       library_id: fam.habitLibrary.find((l) => l.name === h.name)?.id ?? null,
     }))
@@ -181,58 +219,94 @@ export function ScoutChat({
       }
     })
 
+  // one parent message → one dynamic Scout reply (ack + dig, or "ready?")
   const send = async () => {
     const text = input.trim()
     if (!text || thinking) return
     setInput('')
-    notesRef.current.push(text)
     const newMsgs: ChatMsg[] = [...msgs, { who: 'me' as const, text }]
     setMsgs(newMsgs)
     setThinking(true)
 
-    if (phase === 'intakeHabits') {
-      const drafts = await proposeHabits(newMsgs)
-      setHabitDrafts(drafts)
-      setMsgs((m) => [
-        ...m,
-        {
-          who: 'bot',
-          text: `Here’s a starting set for ${name} — ${drafts.filter((d) => d.is_core).length} cores and ${drafts.filter((d) => !d.is_core).length} bonus. Each card says why it earns its place. Accept, edit, or skip:`,
-        },
-      ])
-      setPhase('habits')
-    } else if (phase === 'intakeAdvs') {
-      const drafts = await proposeAdvs(newMsgs)
-      setAdvDrafts(drafts)
-      setMsgs((m) => [
-        ...m,
-        {
-          who: 'bot',
-          text: 'A menu to start with — including the free pick, so the weekly outing never depends on stars:',
-        },
-      ])
-      setPhase('adventures')
+    const topic = phase === 'chatHabits' ? 'habits' : 'adventures'
+    const answerNo = (topic === 'habits' ? habitAnswers : advAnswers) + 1
+    const totalAnswers = habitAnswers + advAnswers + 1
+    if (topic === 'habits') setHabitAnswers(answerNo)
+    else setAdvAnswers(answerNo)
+
+    let reply: string
+    let ready: boolean
+    try {
+      if (scoutMode === 'offline') throw new Error('already-offline') // skip the network round-trip
+      const turn = await chatTurn(newMsgs, topic)
+      setScoutMode('online')
+      reply = turn.reply
+      ready = turn.ready
+    } catch {
+      setScoutMode('offline')
+      const s = scriptedTurn(topic, answerNo, name)
+      reply = s.reply
+      ready = s.ready
     }
+    // honour the budget — never let it run long
+    if (totalAnswers >= QUESTION_BUDGET) ready = true
+
+    setMsgs((m) => [...m, { who: 'bot', text: reply }])
+    if (topic === 'habits') setReadyHabits(ready)
+    else setReadyAdvs(ready)
     setThinking(false)
   }
 
+  // parent says yes → generate the habit draft cards
+  const buildHabits = async () => {
+    if (thinking || busy) return
+    setThinking(true)
+    const drafts = await proposeHabits(msgs)
+    setHabitDrafts(drafts)
+    const tailored = drafts.filter((d) => d.source === 'conversation').length
+    const aged = drafts.length - tailored
+    setMsgs((m) => [
+      ...m,
+      {
+        who: 'bot',
+        text:
+          tailored > 0
+            ? `Here’s my recommendation for ${name} — ${tailored} shaped by what you told me, plus ${aged} that simply fit ${name}’s age. Accept the ones you like, edit, or skip the rest:`
+            : `Here’s a starting set for ${name} — each card says why it earns its place. Accept, edit, or skip:`,
+      },
+    ])
+    setPhase('habits')
+    setThinking(false)
+  }
+
+  // habits kept → into the adventures conversation (or finish)
   const confirmHabits = () => {
     if (!adventuresToo) {
       void finish()
       return
     }
+    setMsgs((m) => [...m, { who: 'bot', text: advOpener(name) }])
+    setPhase('chatAdvs')
+  }
+
+  const buildAdvs = async () => {
+    if (thinking || busy) return
+    setThinking(true)
+    const drafts = await proposeAdvs(msgs)
+    setAdvDrafts(drafts)
     setMsgs((m) => [
       ...m,
-      { who: 'bot', text: `Now the fun part — the rewards. What’s nearby that ${name} loves? A park, a pool, a bookshop? And what’s your weekend time and budget honestly like?` },
+      { who: 'bot', text: 'A menu to start with — including the free pick, so the weekly outing never depends on stars:' },
     ])
-    setPhase('intakeAdvs')
+    setPhase('adventures')
+    setThinking(false)
   }
 
   const finish = async () => {
     setBusy(true)
     const habits: HabitRow[] = habitDrafts
       .filter((_, i) => habitState[i] === 'accepted')
-      .map(({ why: _why, ...row }) => row)
+      .map(({ why: _why, source: _source, ...row }) => row)
     const advs: AdvRow[] = advDrafts
       .filter((_, i) => advState[i] === 'accepted')
       .map(({ why: _why, ...row }) => row)
@@ -241,9 +315,9 @@ export function ScoutChat({
   }
 
   const habitAcceptedCount = Object.values(habitState).filter((s) => s === 'accepted').length
-  const allHabitsDecided = habitDrafts.length > 0 && habitDrafts.every((_, i) => habitState[i])
-  const allAdvsDecided = advDrafts.length > 0 && advDrafts.every((_, i) => advState[i])
   const advAcceptedCount = Object.values(advState).filter((s) => s === 'accepted').length
+  const inChat = phase === 'chatHabits' || phase === 'chatAdvs'
+  const replyPlaceholder = phase === 'chatHabits' ? 'Tell the Scout about them…' : 'Your reply…'
 
   const draftCard = (
     kind: 'habit' | 'adv',
@@ -323,26 +397,56 @@ export function ScoutChat({
           )}
         </div>
 
+        {scoutMode === 'offline' && inChat && (
+          <div className="nudge-card" role="status" style={{ fontSize: 12.5 }}>
+            Scout’s AI is offline right now, so it’s using quick guided questions and library-based
+            suggestions. Everything still works.
+          </div>
+        )}
+
+        {/* the ready-to-build gate — appears once the Scout has enough */}
+        {phase === 'chatHabits' && readyHabits && !thinking && (
+          <button className="btn full" onClick={() => void buildHabits()}>
+            Build {name}’s habits ✦
+          </button>
+        )}
+        {phase === 'chatAdvs' && readyAdvs && !thinking && (
+          <button className="btn full" onClick={() => void buildAdvs()}>
+            Build the adventure menu ✦
+          </button>
+        )}
+
         {phase === 'habits' && habitDrafts.length > 0 && (
-          <div className="col gap10" style={{ paddingTop: 6 }}>
-            {habitDrafts.map((d, i) =>
-              draftCard(
-                'habit', i, d.icon, d.name,
-                `${d.time_block} · ${d.is_core ? 'core · +1 ✦' : 'bonus · +2 ✦'} · ${d.category}`,
-                d.why,
-                habitState[i],
-                (s) => setHabitState((p) => ({ ...p, [i]: s })),
-                (v) => setHabitDrafts((p) => p.map((x, k) => (k === i ? { ...x, name: v, library_id: null } : x))),
-              ),
-            )}
-            <button className="btn full" disabled={!allHabitsDecided || habitAcceptedCount === 0} onClick={confirmHabits}>
+          <div className="col gap14" style={{ paddingTop: 6 }}>
+            {(['conversation', 'age'] as const).map((src) => {
+              const items = habitDrafts
+                .map((d, i) => ({ d, i }))
+                .filter(({ d }) => d.source === src)
+              if (items.length === 0) return null
+              return (
+                <div className="col gap10" key={src}>
+                  <div className="eyebrow">
+                    {src === 'conversation' ? `Tailored to ${name}` : `Great for ${name}’s age`}
+                  </div>
+                  {items.map(({ d, i }) =>
+                    draftCard(
+                      'habit', i, d.icon, d.name,
+                      `${d.time_block} · ${d.is_core ? 'core · +1 ✦' : 'bonus · +2 ✦'} · ${d.category}`,
+                      d.why,
+                      habitState[i],
+                      (s) => setHabitState((p) => ({ ...p, [i]: s })),
+                      (v) => setHabitDrafts((p) => p.map((x, k) => (k === i ? { ...x, name: v, library_id: null } : x))),
+                    ),
+                  )}
+                </div>
+              )
+            })}
+            <button className="btn full" disabled={habitAcceptedCount === 0} onClick={confirmHabits}>
               {habitAcceptedCount === 0
-                ? 'Accept at least one habit'
-                : !allHabitsDecided
-                  ? 'Decide each card to continue'
-                  : adventuresToo
-                    ? `Keep these ${habitAcceptedCount} → now adventures`
-                    : `Keep these ${habitAcceptedCount} ✦`}
+                ? 'Accept the ones you want'
+                : adventuresToo
+                  ? `Keep these ${habitAcceptedCount} → now adventures`
+                  : `Keep these ${habitAcceptedCount} ✦`}
             </button>
           </div>
         )}
@@ -359,14 +463,14 @@ export function ScoutChat({
                 (v) => setAdvDrafts((p) => p.map((x, k) => (k === i ? { ...x, name: v, library_id: null } : x))),
               ),
             )}
-            <button className="btn full" disabled={!allAdvsDecided || advAcceptedCount === 0 || busy} onClick={finish}>
-              {busy ? 'saving…' : advAcceptedCount === 0 ? 'Accept at least one adventure' : 'Build the board ✦'}
+            <button className="btn full" disabled={advAcceptedCount === 0 || busy} onClick={finish}>
+              {busy ? 'saving…' : advAcceptedCount === 0 ? 'Accept the ones you want' : 'Build the board ✦'}
             </button>
           </div>
         )}
       </div>
 
-      {(phase === 'intakeHabits' || phase === 'intakeAdvs') && (
+      {inChat && (
         <form
           className="row gap8"
           style={{ paddingTop: 10 }}
@@ -379,7 +483,7 @@ export function ScoutChat({
             className="input grow"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={phase === 'intakeHabits' ? `Mornings are chaos, he never tidies up…` : 'There’s a park nearby, he loves to swim…'}
+            placeholder={replyPlaceholder}
             aria-label="your reply"
           />
           <button className="btn" style={{ padding: '0 18px' }} disabled={!input.trim() || thinking} aria-label="send">

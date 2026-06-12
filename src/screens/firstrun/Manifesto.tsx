@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Zee } from '../../components/Zee'
 
 const LINES = [
-  'We live in the most distracting world ever built.',
+  'The world’s full of pings and of pop-ups and pings.',
   'StarqueZZ gives your kid their own quest — no more “what do I need to do?”',
   'We help you choose habits that fit your kid — and grow as they do.',
   'And every reward is an adventure you have together.',

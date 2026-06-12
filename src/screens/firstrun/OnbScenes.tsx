@@ -118,7 +118,7 @@ export function SceneDesign() {
   )
 }
 
-/** Problem 3 — adventures together: stars buy shared time, never stuff. */
+/** Problem 3 — adventures together: stars redeem shared time, never stuff. */
 export function SceneTogether() {
   return (
     <Frame>

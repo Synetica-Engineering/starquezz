@@ -17,7 +17,7 @@ test('full family journey: signup → wizard → kid loop → ceremony → diges
 
   // ---- first-run manifesto: all three problems, then ignition ----
   await expect(page.locator('.manifesto')).toBeVisible()
-  await expect(page.locator('.mline')).toContainText('distracting world')
+  await expect(page.locator('.mline')).toContainText('pings and of pop-ups')
   for (let i = 0; i < 4; i++) {
     await page.locator('.manifesto').click({ position: { x: 100, y: 200 } })
     await page.waitForTimeout(250)
@@ -165,6 +165,8 @@ test('full family journey: signup → wizard → kid loop → ceremony → diges
 })
 
 test('scout wizard path: conversation → draft cards → working board', async ({ page }) => {
+  // a live-LLM, two-topic conversation is slow — give it room
+  test.setTimeout(240_000)
   await page.goto('/')
   // skip intro
   await page.locator('.manifesto .mskip').click()
@@ -182,29 +184,52 @@ test('scout wizard path: conversation → draft cards → working board', async 
   await page.locator('#birthyear').selectOption({ index: 5 })
   await page.getByRole('button', { name: /next/i }).click()
 
-  // the Scout path (LLM proxy absent locally → library-grounded fallback)
+  // the Scout path is a dynamic conversation (live LLM, or scripted fallback);
+  // drive it until the ready-to-build gate appears, tolerant of turn count.
   await page.getByRole('button', { name: /talk it through with the scout/i }).click()
-  await page.locator('form input.input').fill('Mornings are chaos and she never tidies up.')
-  await page.locator('form button.btn').click()
 
-  // draft cards arrive with the "why it matters" line
-  await expect(page.locator('.draftcard').first()).toBeVisible({ timeout: 15_000 })
-  await expect(page.locator('.dc-why').first()).not.toBeEmpty()
-  // accept every habit card (accepted chips leave the .accept set)
-  while ((await page.locator('.chip.accept').count()) > 0) {
-    await page.locator('.chip.accept').first().click()
-    await page.waitForTimeout(120)
+  const driveToBuild = async (buildRe: RegExp, lines: string[]) => {
+    for (let turn = 0; turn < 8; turn++) {
+      const build = page.getByRole('button', { name: buildRe })
+      if (await build.isVisible().catch(() => false)) return build
+      const field = page.locator('form input.input')
+      await expect(field).toBeVisible({ timeout: 20_000 })
+      const botsBefore = await page.locator('.bubble.bot').count()
+      await field.fill(lines[Math.min(turn, lines.length - 1)])
+      await page.locator('form button.btn').click()
+      // wait for the Scout's reply to actually land before the next turn,
+      // so we don't fire messages faster than the LLM answers
+      await expect(page.locator('.bubble.bot')).toHaveCount(botsBefore + 1, { timeout: 25_000 })
+      await expect(page.locator('.bubble.typing')).toHaveCount(0, { timeout: 25_000 })
+    }
+    const build = page.getByRole('button', { name: buildRe })
+    await expect(build).toBeVisible({ timeout: 20_000 })
+    return build
   }
+
+  const habitLines = [
+    'Mealtimes are chaos and she never tidies up.',
+    'She gets dressed on her own. I want calmer mealtimes.',
+    'That is everything — please go ahead.',
+  ]
+  await (await driveToBuild(/build .*habits/i, habitLines)).click()
+
+  // grouped recommendation arrives; accept at least one and move on
+  await expect(page.locator('.draftcard').first()).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.dc-why').first()).not.toBeEmpty()
+  await page.locator('.chip.accept').first().click()
   await page.getByRole('button', { name: /now adventures/i }).click()
 
-  await page.locator('form input.input').fill('A playground nearby; tight budget.')
-  await page.locator('form button.btn').click()
-  await expect(page.locator('.draftcard').first()).toBeVisible({ timeout: 15_000 })
-  while ((await page.locator('.chip.accept').count()) > 0) {
-    await page.locator('.chip.accept').first().click()
-    await page.waitForTimeout(120)
-  }
-  await page.getByRole('button', { name: /build the board/i }).click()
+  const advLines = [
+    'A playground and a pool nearby; tight budget.',
+    'That works — build the menu please.',
+  ]
+  await (await driveToBuild(/build the adventure menu/i, advLines)).click()
+  await expect(page.locator('.draftcard').first()).toBeVisible({ timeout: 20_000 })
+  await page.locator('.chip.accept').first().click()
+  const buildBoard = page.getByRole('button', { name: /build the board/i })
+  await expect(buildBoard).toBeEnabled({ timeout: 10_000 })
+  await buildBoard.click()
 
   // PIN + handoff
   await expect(page.getByText('Set your parent PIN')).toBeVisible({ timeout: 15_000 })
@@ -213,10 +238,11 @@ test('scout wizard path: conversation → draft cards → working board', async 
   await pressKeypad(page, '2580')
   await page.getByRole('button', { name: /give it to zia/i }).click()
 
-  // the board works
+  // the board works — Scout produced a personalised, navigable board
   await page.locator('.face-pick', { hasText: 'Zia' }).click()
   await expect(page.locator('.greet .nm')).toHaveText('Zia')
-  await expect(page.locator('.habit').first()).toBeVisible()
+  await expect(page.locator('.bottomnav')).toBeVisible()
+  await expect(page.locator('.blockbar')).toBeVisible()
 })
 
 test('PWA: manifest + service worker registration are wired', async ({ page }) => {

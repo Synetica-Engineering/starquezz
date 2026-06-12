@@ -13,6 +13,18 @@ export function AuthScreen() {
   const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
+  // the front door: no account needed — a real (anonymous) Supabase session
+  // backs the family from the first tap; email can be attached later
+  const tryNow = async () => {
+    setError(null)
+    setBusy(true)
+    const { error } = await supabase.auth.signInAnonymously()
+    if (error) {
+      setError('Could not start — check your connection and try again.')
+      setBusy(false)
+    }
+  }
+
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -52,6 +64,19 @@ export function AuthScreen() {
               : 'We’ll email you a reset link.'}
         </div>
       </div>
+
+      {mode === 'signup' && (
+        <>
+          <button className="btn full" disabled={busy} onClick={() => void tryNow()}>
+            {busy ? '…' : 'Start now — no account needed ✦'}
+          </button>
+          <div className="row gap10" style={{ alignItems: 'center', margin: '2px 0' }}>
+            <span style={{ flex: 1, height: 1.5, background: 'var(--line)' }} />
+            <span className="faint" style={{ fontSize: 12, fontWeight: 700 }}>or with email</span>
+            <span style={{ flex: 1, height: 1.5, background: 'var(--line)' }} />
+          </div>
+        </>
+      )}
 
       <form className="col gap12" onSubmit={submit}>
         <div>

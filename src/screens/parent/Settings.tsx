@@ -7,11 +7,17 @@ import { useFamily } from '../../state/family'
 import { KidAvatar, SqzIcon } from '../../components/icons'
 import { Keypad, Sheet, Toast, useToast } from '../../components/ui'
 import { AvatarPicker } from '../../components/AvatarPicker'
+import { ClaimAccountSheet } from '../../components/ClaimAccount'
+import { useSession } from '../../state/session'
 import { isMuted, setMuted } from '../../lib/sound'
 import type { Child } from '../../lib/types'
 
 export function Settings({ onAddChild }: { onAddChild: () => void }) {
   const fam = useFamily()
+  const { session } = useSession()
+  const isGuest = session?.user.is_anonymous ?? false
+  const [claiming, setClaiming] = useState(false)
+  const [signOutGuard, setSignOutGuard] = useState(false)
   const [muted, setMutedState] = useState(isMuted())
   const [codeFor, setCodeFor] = useState<Child | null>(null)
   const [code, setCode] = useState('')
@@ -168,19 +174,38 @@ export function Settings({ onAddChild }: { onAddChild: () => void }) {
 
         <div className="col gap8">
           <div className="eyebrow">Account</div>
+          {isGuest && (
+            <button
+              className="plist-row"
+              style={{ border: 'none', cursor: 'pointer', textAlign: 'left' }}
+              onClick={() => setClaiming(true)}
+            >
+              <span className="pr-icon" style={{ color: '#FFE49C' }}>
+                <SqzIcon name="sparkle" size={18} />
+              </span>
+              <span className="col grow">
+                <span className="pr-name">Save your family</span>
+                <span className="pr-sub">guest mode — this family lives only on this device</span>
+              </span>
+              <span className="chip accept">add email</span>
+            </button>
+          )}
           <div className="plist-row">
             <span className="pr-icon">
               <SqzIcon name="lock" size={18} />
             </span>
             <span className="col grow">
               <span className="pr-name">Parent PIN</span>
-              <span className="pr-sub">{fam.parent?.email}</span>
+              <span className="pr-sub">{isGuest ? 'guest family' : fam.parent?.email}</span>
             </span>
             <button className="chip edit" onClick={() => setPinSheet(true)}>
               change
             </button>
           </div>
-          <button className="btn ghost sm" onClick={() => void supabase.auth.signOut()}>
+          <button
+            className="btn ghost sm"
+            onClick={() => (isGuest ? setSignOutGuard(true) : void supabase.auth.signOut())}
+          >
             <SqzIcon name="logout" size={15} style={{ marginRight: 6, verticalAlign: -2 }} />
             Sign out
           </button>
@@ -249,6 +274,45 @@ export function Settings({ onAddChild }: { onAddChild: () => void }) {
             />
             <button className="btn full" disabled={delta === 0} onClick={() => void saveAdjust()}>
               Apply — leaves a footprint
+            </button>
+          </div>
+        </Sheet>
+      )}
+
+      {claiming && (
+        <ClaimAccountSheet
+          onClose={() => setClaiming(false)}
+          onSaved={() => {
+            setClaiming(false)
+            void fam.refresh()
+            showToast('Family saved — sign in anywhere now ✦')
+          }}
+        />
+      )}
+
+      {/* a guest signing out loses the family forever — make that loud */}
+      {signOutGuard && (
+        <Sheet onClose={() => setSignOutGuard(false)}>
+          <div className="col gap12 tac" style={{ padding: '6px 2px' }}>
+            <h3 style={{ margin: 0 }}>Wait — your family isn’t saved</h3>
+            <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+              This family has no email attached. If you sign out now, the kids, stars and streaks are{' '}
+              <b style={{ color: '#FF9CC6' }}>gone for good</b>.
+            </p>
+            <button
+              className="btn full"
+              onClick={() => {
+                setSignOutGuard(false)
+                setClaiming(true)
+              }}
+            >
+              Save it with an email first ✦
+            </button>
+            <button className="btn full danger" onClick={() => void supabase.auth.signOut()}>
+              Sign out anyway — lose this family
+            </button>
+            <button className="chip skip" onClick={() => setSignOutGuard(false)}>
+              never mind
             </button>
           </div>
         </Sheet>
