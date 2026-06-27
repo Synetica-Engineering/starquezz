@@ -17,7 +17,7 @@ ceremony, sealed adventure tickets — while the parent gets the weekly digest.
 | 2 · Kid loop (board, check-off FX, jar, streaks) | ✅ done — E2E covered |
 | 3 · Adventure loop (menu, redemption, ceremony) | ✅ done — E2E covered |
 | 4 · Parent surface (digest, editors, libraries, dream, graduation) | ✅ done |
-| 5 · Scout (edge function, chat wizard, draft cards, fallback) | ✅ done — LLM path needs `ANTHROPIC_API_KEY` on the edge function; library-grounded fallback works without it |
+| 5 · Scout (edge function, chat wizard, draft cards, fallback) | ✅ done — LLM path prefers `DEEPSEEK_API_KEY` or `OPENROUTER_API_KEY` for DeepSeek V4 Flash; library-grounded fallback works without it |
 | 6 · Polish (PWA, reduced motion, multi-child, secret codes) | ✅ done |
 
 ## Verification
@@ -57,8 +57,9 @@ warning. Covered by `tests/integration/anonymous.test.ts` +
 ## To deploy (not yet done)
 
 1. `supabase link` + `supabase db push` to a cloud project; deploy
-   `supabase/functions/scout` with `ANTHROPIC_API_KEY` (or
-   `OPENROUTER_API_KEY`) secret.
+   `supabase/functions/scout` with `DEEPSEEK_API_KEY` (or
+   `OPENROUTER_API_KEY`) secret. `ANTHROPIC_API_KEY` remains supported as a
+   fallback.
 2. Auth settings on the cloud project: enable **anonymous sign-ins** AND
    captcha (anonymous endpoints are spammable); add a cleanup job for
    anonymous users with no children after ~30 days.

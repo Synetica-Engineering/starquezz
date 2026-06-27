@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase'
 import { useFamily } from '../../state/family'
 import { SqzIcon, StarToken } from '../../components/icons'
 import { Zee } from '../../components/Zee'
+import { activeDaysForFrequency } from '../../lib/habits'
 import type { HabitCategory, TimeBlock } from '../../lib/types'
 
 export interface DraftHabit {
@@ -20,6 +21,7 @@ export interface DraftHabit {
   source: 'conversation' | 'age'
   why: string
   library_id?: string | null
+  active_days?: number[]
 }
 
 export interface DraftAdventure {
@@ -129,6 +131,7 @@ export function ScoutChat({
     const picked = ordered.filter((h) => (seen.has(h.id) ? false : (seen.add(h.id), true))).slice(0, 9)
     return picked.map((h, i) => ({
       name: h.name, icon: h.icon, category: h.category, time_block: h.suggested_block,
+      active_days: activeDaysForFrequency(h.suggested_frequency),
       is_core: i < coreTarget, source: 'age' as const, why: h.why_it_matters, library_id: h.id,
     }))
   }
@@ -196,6 +199,13 @@ export function ScoutChat({
   /** drafts must be schema-valid: clamp anything the model got creative with */
   const resolveHabitDrafts = (raw: DraftHabit[]): DraftHabit[] =>
     raw.slice(0, 9).map((h) => ({
+      ...(() => {
+        const library = fam.habitLibrary.find((l) => l.name === h.name)
+        return {
+          library_id: library?.id ?? null,
+          active_days: library ? activeDaysForFrequency(library.suggested_frequency) : undefined,
+        }
+      })(),
       name: String(h.name).slice(0, 60),
       icon: typeof h.icon === 'string' && h.icon ? h.icon : 'check',
       category: (['body', 'mind', 'space', 'heart'] as const).includes(h.category) ? h.category : 'body',
@@ -203,7 +213,6 @@ export function ScoutChat({
       is_core: Boolean(h.is_core),
       source: h.source === 'conversation' ? 'conversation' : 'age',
       why: String(h.why ?? '').slice(0, 240),
-      library_id: fam.habitLibrary.find((l) => l.name === h.name)?.id ?? null,
     }))
 
   const resolveAdvDrafts = (raw: DraftAdventure[]): DraftAdventure[] =>
@@ -431,7 +440,7 @@ export function ScoutChat({
                   {items.map(({ d, i }) =>
                     draftCard(
                       'habit', i, d.icon, d.name,
-                      `${d.time_block} · ${d.is_core ? 'core · +1 ✦' : 'bonus · +2 ✦'} · ${d.category}`,
+                      `${d.is_core ? 'core · +1 ✦' : 'bonus · +2 ✦'} · ${d.category}`,
                       d.why,
                       habitState[i],
                       (s) => setHabitState((p) => ({ ...p, [i]: s })),

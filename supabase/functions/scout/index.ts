@@ -1,13 +1,14 @@
-// Scout LLM proxy — Claude API via Edge Function (the key never reaches the
-// client). Structured output only: the model fills a JSON schema; free text
-// never writes to the database. The kid loop never calls this.
+// Scout LLM proxy — server-side only, so the key never reaches the client.
+// Structured output only: the model fills a JSON schema; free text never
+// writes to the database. The kid loop never calls this.
 // Rate-limited per account: the app is free and public — this must not
 // become an open faucet.
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-const MODEL = 'claude-haiku-4-5-20251001'
-const OPENROUTER_MODEL = 'anthropic/claude-haiku-4.5'
-// a full conversational setup is ~6-10 cheap Haiku turns + 2 proposals; this
+const DEEPSEEK_MODEL = 'deepseek-v4-flash'
+const OPENROUTER_MODEL = 'deepseek/deepseek-v4-flash'
+const ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001'
+// a full conversational setup is ~6-10 cheap Flash turns + 2 proposals; this
 // caps abuse without choking a legitimate multi-kid session. Tune in prod.
 const MAX_CALLS_PER_DAY = 80
 
@@ -90,6 +91,45 @@ const HABIT_TOOL = {
   },
 }
 
+const INTEREST_HABIT_SYSTEM = `${SYSTEM}
+
+INTEREST HABITS specifically: return EXACTLY 3 tiny daily habit options inspired by the parent's "into right now" field.
+- Every habit must be child-actionable, daily, and doable in 15 minutes or less.
+- No parent-only environment rules, no occasional conflict/repair tasks, no rewards, no screen rules.
+- The first habit should be the strongest fit to preselect; the other two are optional alternatives.
+- Use the parent's words when useful, but make the habit concrete enough to track.`
+
+const INTEREST_HABIT_TOOL = {
+  name: 'propose_interest_habits',
+  description: 'Propose three tiny daily habit options inspired by a child interest field',
+  input_schema: {
+    type: 'object',
+    properties: {
+      habits: {
+        type: 'array',
+        minItems: 3,
+        maxItems: 3,
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', maxLength: 60 },
+            icon: {
+              type: 'string',
+              enum: ['tooth', 'shirt', 'bowl', 'book', 'backpack', 'drop', 'water', 'ball', 'bed', 'bed-made', 'music', 'pencil', 'bulb', 'paint', 'blocks', 'fork', 'plant', 'heart', 'sparkle-heart', 'hands', 'paw', 'dice', 'check'],
+            },
+            category: { type: 'string', enum: ['body', 'mind', 'space', 'heart'] },
+            time_block: { type: 'string', enum: ['morning', 'afternoon', 'evening'] },
+            duration_min: { type: 'integer', minimum: 2, maximum: 15 },
+            why: { type: 'string', maxLength: 180 },
+          },
+          required: ['name', 'icon', 'category', 'time_block', 'duration_min', 'why'],
+        },
+      },
+    },
+    required: ['habits'],
+  },
+}
+
 const ADV_TOOL = {
   name: 'propose_adventures',
   description: 'Propose a tiered adventure menu for this family',
@@ -138,10 +178,12 @@ Deno.serve(async (req) => {
     new Response(JSON.stringify({ error }), { status, headers })
 
   try {
-    // direct Anthropic key, or an OpenRouter key (same Claude model behind it)
+    // Prefer cheap/fast DeepSeek V4 Flash, either direct or through OpenRouter.
+    // Anthropic remains a fallback for existing deployments.
+    const deepseekKey = Deno.env.get('DEEPSEEK_API_KEY')
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
     const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
-    if (!anthropicKey && !openrouterKey) return fail(503, 'scout_unavailable')
+    if (!deepseekKey && !openrouterKey && !anthropicKey) return fail(503, 'scout_unavailable')
 
     // authenticated parents only
     const supa = createClient(
@@ -167,7 +209,7 @@ Deno.serve(async (req) => {
     await service.from('scout_sessions').insert({ parent_id: userData.user.id })
 
     const { kind, topic, profile, conversation, packet } = await req.json()
-    if (kind !== 'habits' && kind !== 'adventures' && kind !== 'chat') return fail(400, 'bad_kind')
+    if (kind !== 'habits' && kind !== 'adventures' && kind !== 'chat' && kind !== 'interest_habits') return fail(400, 'bad_kind')
 
     // privacy: send the minimum — age, interests, the parent's own words.
     const childLine = `Child: age ${Number(profile?.age) || 'unknown'}${profile?.name ? `, called ${String(profile.name).slice(0, 30)}` : ''}${profile?.interests ? `, into: ${String(profile.interests).slice(0, 200)}` : ''}.`
@@ -180,16 +222,28 @@ Deno.serve(async (req) => {
     if (kind === 'chat') {
       const t = topic === 'adventures' ? 'adventures' : 'habits'
       const prompt = `${childLine}\n\nWe are setting up ${t}. Conversation so far:\n${convo}\n\nReply to the parent now.`
-      const out = await callTool({ anthropicKey, openrouterKey, system: CHAT_SYSTEM, tool: CHAT_TOOL, prompt })
+      const out = await callTool({ deepseekKey, openrouterKey, anthropicKey, system: CHAT_SYSTEM, tool: CHAT_TOOL, prompt })
       if (!out || typeof out.reply !== 'string') return fail(502, 'no_reply')
       return new Response(JSON.stringify({ reply: out.reply, ready: Boolean(out.ready) }), { headers })
+    }
+
+    // ---- interest quick-adds: returns { habits } for the manual setup path ----
+    if (kind === 'interest_habits') {
+      const prompt = `${childLine}
+
+Parent wrote this in the "Into right now" field: "${String(profile?.interests ?? '').slice(0, 240)}"
+
+Propose exactly 3 daily habit options that make those interests show up in the routine.`
+      const proposal = await callTool({ deepseekKey, openrouterKey, anthropicKey, system: INTEREST_HABIT_SYSTEM, tool: INTEREST_HABIT_TOOL, prompt })
+      if (!proposal) return fail(502, 'no_proposal')
+      return new Response(JSON.stringify(proposal), { headers })
     }
 
     // ---- proposal: returns { habits } or { adventures } ----
     const tool = kind === 'habits' ? HABIT_TOOL : ADV_TOOL
     const scoutPacket = formatPacket(packet)
     const prompt = `${childLine}${scoutPacket ? `\n\nScout packet:\n${scoutPacket}` : ''}\n\nConversation so far:\n${convo}\n\nPropose ${kind} now.`
-    const proposal = await callTool({ anthropicKey, openrouterKey, system: SYSTEM, tool, prompt })
+    const proposal = await callTool({ deepseekKey, openrouterKey, anthropicKey, system: SYSTEM, tool, prompt })
     if (!proposal) return fail(502, 'no_proposal')
     return new Response(JSON.stringify(proposal), { headers })
   } catch {
@@ -197,16 +251,39 @@ Deno.serve(async (req) => {
   }
 })
 
-// Single structured-output call against either provider. Returns the tool's
+// Single structured-output call against the configured provider. Returns the tool's
 // validated input object, or null on any failure.
 async function callTool(opts: {
+  deepseekKey?: string
   anthropicKey?: string
   openrouterKey?: string
   system: string
   tool: { name: string; description: string; input_schema: object }
   prompt: string
 }): Promise<Record<string, unknown> | null> {
-  const { anthropicKey, openrouterKey, system, tool, prompt } = opts
+  const { deepseekKey, anthropicKey, openrouterKey, system, tool, prompt } = opts
+  if (deepseekKey) {
+    const out = await callOpenAiCompatibleTool({
+      url: 'https://api.deepseek.com/chat/completions',
+      key: deepseekKey,
+      model: DEEPSEEK_MODEL,
+      system,
+      tool,
+      prompt,
+    })
+    if (out) return out
+  }
+  if (openrouterKey) {
+    const out = await callOpenAiCompatibleTool({
+      url: 'https://openrouter.ai/api/v1/chat/completions',
+      key: openrouterKey,
+      model: OPENROUTER_MODEL,
+      system,
+      tool,
+      prompt,
+    })
+    if (out) return out
+  }
   if (anthropicKey) {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -216,7 +293,7 @@ async function callTool(opts: {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: ANTHROPIC_MODEL,
         max_tokens: 1500,
         system,
         tools: [tool],
@@ -229,12 +306,23 @@ async function callTool(opts: {
     const toolUse = body.content?.find((c: { type: string }) => c.type === 'tool_use')
     return (toolUse?.input as Record<string, unknown>) ?? null
   }
-  // OpenRouter (OpenAI-compatible), same Claude model behind it
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  return null
+}
+
+async function callOpenAiCompatibleTool(opts: {
+  url: string
+  key: string
+  model: string
+  system: string
+  tool: { name: string; description: string; input_schema: object }
+  prompt: string
+}): Promise<Record<string, unknown> | null> {
+  const { url, key, model, system, tool, prompt } = opts
+  const res = await fetch(url, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${openrouterKey}`, 'content-type': 'application/json' },
+    headers: { Authorization: `Bearer ${key}`, 'content-type': 'application/json' },
     body: JSON.stringify({
-      model: OPENROUTER_MODEL,
+      model,
       max_tokens: 1500,
       messages: [
         { role: 'system', content: system },

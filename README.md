@@ -59,7 +59,7 @@ docs/AGENT_BRIEF.md    product source of truth
 docs/DESIGN_BRIEF.md   design brief (Cosmic direction)
 docs/plans/            implementation plan
 supabase/migrations/   schema · RLS · RPCs · curated libraries
-supabase/functions/    scout (Claude proxy, structured output, rate-limited)
+supabase/functions/    scout (DeepSeek V4 Flash proxy, structured output, rate-limited)
 src/                   the app (kid world · parent world · first-run)
 tests/                 integration (vitest) + e2e (playwright)
 STATUS.md              current state, kept honest

@@ -27,7 +27,7 @@ starquezz/
 │  │  ├─ 0003_rpcs.sql           # star economy RPCs + streak fns + PIN fns
 │  │  └─ 0004_libraries.sql      # global habit_library + library_activities content
 │  ├─ seed.sql                   # (dev only) nothing destructive
-│  └─ functions/scout/index.ts   # Claude proxy w/ structured output + rate limit
+│  └─ functions/scout/index.ts   # DeepSeek V4 Flash proxy w/ structured output + rate limit
 ├─ tests/
 │  ├─ integration/economy.test.ts    # RPCs vs local supabase (service role)
 │  ├─ integration/rls.test.ts        # family isolation proofs
@@ -101,7 +101,7 @@ Star-day = every active core habit scheduled that ISO-dow has a completion. Perf
 - [x] Settings: kid secret-code toggle (only visible with 2+ children), ceremony reminder pref, sound mute
 
 ### Phase 5 — Scout
-- [x] Edge Function `scout`: Claude structured-output proxy, schema-validated draft habits/adventures, rate limit; never computes stars
+- [x] Edge Function `scout`: DeepSeek V4 Flash structured-output proxy, schema-validated draft habits/adventures, rate limit; never computes stars
 - [x] Wizard chat UI with draft cards (accept/edit/skip); deterministic seed fallback path ("skip — I'll do it myself") so the app fully works with no LLM key
 - [x] Re-run triggers from parent side (new child, graduation slot, menu refresh)
 

@@ -8,6 +8,7 @@ import { HABIT_ICONS, SqzIcon } from '../../components/icons'
 import { Sheet, StarBurst, Toast, useToast } from '../../components/ui'
 import { Zee } from '../../components/Zee'
 import { addDays, todayLocal, BLOCKS, BLOCK_LABEL } from '../../lib/dates'
+import { activeDaysForFrequency } from '../../lib/habits'
 import type { Habit, HabitCategory, HabitLibraryEntry, TimeBlock } from '../../lib/types'
 
 const CATEGORIES: HabitCategory[] = ['body', 'mind', 'space', 'heart']
@@ -132,11 +133,13 @@ export function HabitEditor() {
       icon: entry.icon,
       category: entry.category,
       time_block: entry.suggested_block,
+      active_days: activeDaysForFrequency(entry.suggested_frequency),
       is_core: true,
       sort_order: active.length,
     })
     if (error) return showToast('Could not add')
     await fam.refresh()
+    setLibrary(false)
     showToast(`"${entry.name}" added to ${child.name}`)
   }
 
@@ -150,7 +153,7 @@ export function HabitEditor() {
           <SqzIcon name="book" size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
           library
         </button>
-        <button className="iconbtn" onClick={() => setForm(emptyForm())} aria-label="add habit">
+        <button className="iconbtn" onClick={() => setLibrary(true)} aria-label="add habit">
           <SqzIcon name="plus" size={18} />
         </button>
       </div>
@@ -386,7 +389,17 @@ export function HabitEditor() {
       )}
 
       {/* habit library browser */}
-      {library && <HabitLibrarySheet age={age} onAdd={addFromLibrary} onClose={() => setLibrary(false)} />}
+      {library && (
+        <HabitLibrarySheet
+          age={age}
+          onAdd={addFromLibrary}
+          onCustom={() => {
+            setLibrary(false)
+            setForm(emptyForm())
+          }}
+          onClose={() => setLibrary(false)}
+        />
+      )}
       <Toast message={toast} />
     </div>
   )
@@ -395,10 +408,12 @@ export function HabitEditor() {
 function HabitLibrarySheet({
   age,
   onAdd,
+  onCustom,
   onClose,
 }: {
   age: number
   onAdd: (e: HabitLibraryEntry) => Promise<void>
+  onCustom: () => void
   onClose: () => void
 }) {
   const fam = useFamily()
@@ -419,6 +434,9 @@ function HabitLibrarySheet({
             {c}
           </button>
         ))}
+        <button className="fchip" onClick={onCustom}>
+          custom
+        </button>
       </div>
       <div className="col gap10">
         {list.map((h) => (
@@ -430,7 +448,7 @@ function HabitLibrarySheet({
               <span className="col grow">
                 <span className="lc-name">{h.name}</span>
                 <span className="lc-tags">
-                  {h.category} · ages {h.age_min}–{h.age_max} · {h.suggested_block}
+                  {h.category} · ages {h.age_min}–{h.age_max} · {h.suggested_frequency ?? 'Daily'} · {h.duration_min ?? 10}m
                 </span>
               </span>
               <button className="chip accept" onClick={() => void onAdd(h)}>

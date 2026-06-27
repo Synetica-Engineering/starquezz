@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FamilyState } from '../../state/family'
 import { ScoutChat } from './Scout'
+import type { HabitLibraryEntry } from '../../lib/types'
 
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
@@ -12,6 +13,17 @@ vi.mock('../../lib/supabase', () => ({
     functions: { invoke: mocks.invoke },
   },
 }))
+
+const habitEntry = (entry: Omit<HabitLibraryEntry, 'library_key' | 'sources_note' | 'suggested_frequency' | 'duration_min' | 'evidence_level' | 'source_urls' | 'is_active'>): HabitLibraryEntry => ({
+  ...entry,
+  library_key: entry.id,
+  sources_note: '',
+  suggested_frequency: 'Daily',
+  duration_min: 10,
+  evidence_level: '',
+  source_urls: '',
+  is_active: true,
+})
 
 const mockFamily: FamilyState = {
   loading: false,
@@ -26,7 +38,7 @@ const mockFamily: FamilyState = {
   weekFinalizations: [],
   parentEdits: [],
   habitLibrary: [
-    {
+    habitEntry({
       id: 'habit-body-1',
       name: 'Brush teeth',
       icon: 'tooth',
@@ -37,8 +49,8 @@ const mockFamily: FamilyState = {
       why_it_matters: 'Daily hygiene is easiest when it becomes automatic.',
       suggested_block: 'morning',
       mastery_signal: 'Does it without reminders.',
-    },
-    {
+    }),
+    habitEntry({
       id: 'habit-body-2',
       name: 'Get dressed',
       icon: 'shirt',
@@ -49,8 +61,8 @@ const mockFamily: FamilyState = {
       why_it_matters: 'Getting ready independently makes mornings calmer.',
       suggested_block: 'morning',
       mastery_signal: 'Starts without being asked.',
-    },
-    {
+    }),
+    habitEntry({
       id: 'habit-space-1',
       name: 'Pack bag',
       icon: 'backpack',
@@ -61,8 +73,8 @@ const mockFamily: FamilyState = {
       why_it_matters: 'A predictable school bag routine reduces forgotten items.',
       suggested_block: 'evening',
       mastery_signal: 'Checks the bag before bed.',
-    },
-    {
+    }),
+    habitEntry({
       id: 'habit-mind-1',
       name: 'Read 10 minutes',
       icon: 'book',
@@ -73,8 +85,8 @@ const mockFamily: FamilyState = {
       why_it_matters: 'Short daily reading builds fluency.',
       suggested_block: 'evening',
       mastery_signal: 'Chooses reading time independently.',
-    },
-    {
+    }),
+    habitEntry({
       id: 'habit-heart-1',
       name: 'Kindness check',
       icon: 'heart',
@@ -85,7 +97,7 @@ const mockFamily: FamilyState = {
       why_it_matters: 'Naming one kind act helps kids notice relationships.',
       suggested_block: 'evening',
       mastery_signal: 'Can name kind acts without prompting.',
-    },
+    }),
   ],
   activityLibrary: [],
   refresh: vi.fn(),
