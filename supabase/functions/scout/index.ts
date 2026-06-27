@@ -162,6 +162,29 @@ const ADV_TOOL = {
   },
 }
 
+const ADV_ICON_VALUES = ['tent', 'flashlight', 'fort', 'pancake', 'popcorn', 'cupcake', 'disco', 'plane', 'flask', 'book-night', 'basket', 'chef', 'stars', 'swing', 'map', 'library', 'bike', 'bookshop', 'swim', 'leaf', 'sunrise', 'market', 'noodles', 'museum', 'train', 'scroll', 'campfire', 'easel']
+
+const CUSTOM_ADV_TOOL = {
+  name: 'tidy_custom_adventure',
+  description: 'Turn one rough parent idea into a Starquezz adventure draft',
+  input_schema: {
+    type: 'object',
+    properties: {
+      adventure: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', maxLength: 48, description: 'Short experience title, never a toy or money item' },
+          illustration: { type: 'string', enum: ADV_ICON_VALUES },
+          tier: { type: 'integer', minimum: 0, maximum: 3 },
+          venue_note: { type: 'string', maxLength: 60, description: 'Short practical detail, place, or setup note. Empty string if none.' },
+        },
+        required: ['name', 'illustration', 'tier', 'venue_note'],
+      },
+    },
+    required: ['adventure'],
+  },
+}
+
 const formatPacket = (packet: unknown) => {
   if (!packet || typeof packet !== 'object' || Array.isArray(packet)) return ''
   return Object.entries(packet as Record<string, unknown>)
@@ -212,8 +235,8 @@ Deno.serve(async (req) => {
     if ((count ?? 0) >= MAX_CALLS_PER_DAY) return fail(429, 'rate_limited')
     await service.from('scout_sessions').insert({ parent_id: userData.user.id })
 
-    const { kind, topic, profile, conversation, packet } = await req.json()
-    if (kind !== 'habits' && kind !== 'adventures' && kind !== 'chat' && kind !== 'interest_habits') return fail(400, 'bad_kind')
+    const { kind, topic, profile, conversation, packet, idea } = await req.json()
+    if (kind !== 'habits' && kind !== 'adventures' && kind !== 'chat' && kind !== 'interest_habits' && kind !== 'custom_adventure') return fail(400, 'bad_kind')
 
     // privacy: send the minimum — age, interests, the parent's own words.
     const childLine = `Child: age ${Number(profile?.age) || 'unknown'}${profile?.name ? `, called ${String(profile.name).slice(0, 30)}` : ''}${profile?.interests ? `, into: ${String(profile.interests).slice(0, 200)}` : ''}.`
@@ -239,6 +262,25 @@ Parent wrote this in the "Into right now" field: "${String(profile?.interests ??
 
 Propose exactly 3 daily habit options that make those interests show up in the routine.`
       const proposal = await callTool({ deepseekKey, openrouterKey, anthropicKey, system: INTEREST_HABIT_SYSTEM, tool: INTEREST_HABIT_TOOL, prompt })
+      if (!proposal) return fail(502, 'no_proposal')
+      return new Response(JSON.stringify(proposal), { headers })
+    }
+
+    // ---- one-off custom adventure: parent gives a rough idea; Scout tidies it
+    if (kind === 'custom_adventure') {
+      const parentIdea = String(idea ?? '').trim().slice(0, 400)
+      if (!parentIdea) return fail(400, 'missing_idea')
+      const prompt = `${childLine}
+
+Parent wants to add this adventure idea: "${parentIdea}"
+
+Tidy it into one Starquezz adventure draft. Keep the spirit, but enforce the principles:
+- The line item is a shared experience, never a toy, money, food-as-wage, or access to parent time.
+- Use a concrete, kid-readable title.
+- Choose the closest illustration from the enum.
+- Pick tier 0 for free/everyday at-home ideas, tier 1 for simple/cheap, tier 2 for special outings, tier 3 for big rare outings.
+- Put any useful place/setup detail in venue_note.`
+      const proposal = await callTool({ deepseekKey, openrouterKey, anthropicKey, system: SYSTEM, tool: CUSTOM_ADV_TOOL, prompt })
       if (!proposal) return fail(502, 'no_proposal')
       return new Response(JSON.stringify(proposal), { headers })
     }
