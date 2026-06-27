@@ -157,7 +157,7 @@ export function KidShell({ onParent }: { onParent: () => void }) {
       <div className="bottomnav">
         {navIcon('board', 'Today', <SqzIcon name="sun" size={22} />)}
         {navIcon('jar', 'Stars', <StarToken size={22} color="currentColor" />)}
-        {navIcon('adventures', 'Adventures', <SqzIcon name="tent" size={22} />)}
+        {navIcon('adventures', 'Redeem Adventures', <SqzIcon name="tent" size={22} />)}
       </div>
       {ceremony && <Ceremony child={active} onClose={() => setCeremony(false)} />}
     </>
