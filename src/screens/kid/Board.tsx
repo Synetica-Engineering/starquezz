@@ -19,7 +19,7 @@ export function Board({
   starRef,
 }: {
   child: Child
-  starRef: React.RefObject<HTMLSpanElement | null>
+  starRef: React.RefObject<HTMLElement | null>
 }) {
   const fam = useFamily()
   const today = todayLocal()

@@ -102,7 +102,7 @@ test('full family journey: signup → wizard → kid loop → ceremony → diges
   }
 
   // ---- star jar ----
-  await page.locator('.navitem', { hasText: 'Stars' }).click()
+  await page.getByRole('button', { name: 'open stars' }).click()
   await expect(page.locator('.jar-count')).toContainText('stars')
   await expect(page.locator('.weekstrip')).toBeVisible()
 
