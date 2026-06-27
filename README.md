@@ -1,16 +1,16 @@
-# StarqueZZ ✦
+# Starquezz ✦
 
 **Your kid runs their own routine. Stars buy adventures together — never toys
 or money. Free for every family, forever.**
 
-StarqueZZ is a kid-run habit app born from one family (Zen, 8, and Zia, 5 —
+Starquezz is a kid-run habit app born from one family (Zen, 8, and Zia, 5 —
 the founding users) and published for any family. It solves three problems at
 once:
 
 1. **The kid's problem** — "what do I need to do?" asked all day. The board
    answers instead, so the routine becomes *theirs*.
 2. **The parent's design problem** — which habits matter at this age, how many
-   is too many? StarqueZZ helps you *design and evolve* a balanced set:
+   is too many? Starquezz helps you *design and evolve* a balanced set:
    research-informed suggestions, balance nudges, and habits that graduate to
    the Hall of Fame when mastered.
 3. **The parent's ideation problem** — the reward catalog is a pre-decided

@@ -1,4 +1,4 @@
-// Zee — the star-sprite mascot. The "ZZ" in StarqueZZ is his snooze; he
+// Zee — the star-sprite mascot. The "zz" in Starquezz is his snooze; he
 // wakes when you tap. His lines are scripted and authored, NEVER generated,
 // and the kid never chats with him (AGENT_BRIEF §5 hard rule).
 import type { ReactNode } from 'react'

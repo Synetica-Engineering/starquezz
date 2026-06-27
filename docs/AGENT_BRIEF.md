@@ -1,17 +1,17 @@
-# StarqueZZ v2 — Agent Build Brief
+# Starquezz v2 — Agent Build Brief
 
-> **Purpose of this document:** complete, self-contained context for an AI agent (or developer) building StarqueZZ v2 from scratch. Read this before writing any code. Every product decision an agent would otherwise have to guess is stated here. When in doubt, optimize for the kid's autonomy and the parent's near-zero daily involvement.
+> **Purpose of this document:** complete, self-contained context for an AI agent (or developer) building Starquezz v2 from scratch. Read this before writing any code. Every product decision an agent would otherwise have to guess is stated here. When in doubt, optimize for the kid's autonomy and the parent's near-zero daily involvement.
 
 ---
 
 ## 1. What this is
 
-**StarqueZZ is a published, free-for-everyone habit-autonomy app, designed family-first.** It was born from one family — Zen and Zia are the founding users and every design decision is tested against them — but it is a **public product with open signup** that any parent can use, free, forever.
+**Starquezz is a published, free-for-everyone habit-autonomy app, designed family-first.** It was born from one family — Zen and Zia are the founding users and every design decision is tested against them — but it is a **public product with open signup** that any parent can use, free, forever.
 
 It solves three problems at once:
 
 1. **The kid's problem:** kids ask their parent "what do I need to do?" several times a day (Zen, age 8, is patient zero). The app answers that question instead, so the routine becomes *theirs*, not something administered to them.
-2. **The parent's design problem (the core value proposition):** designing a *well-balanced* habit set tailored to a specific kid is genuinely hard — which habits matter at this age, what does child-development research actually say, how many is too many, and what to do when one is mastered (piano is automatic now — shuffle it out, focus on handwriting). StarqueZZ helps the parent **design and evolve** the habit set, not just track it: good questions that deepen the parent's understanding of their kid, research-informed suggestions when the parent is unsure, and a habit set that lives — habits graduate when mastered and new ones take their place.
+2. **The parent's design problem (the core value proposition):** designing a *well-balanced* habit set tailored to a specific kid is genuinely hard — which habits matter at this age, what does child-development research actually say, how many is too many, and what to do when one is mastered (piano is automatic now — shuffle it out, focus on handwriting). Starquezz helps the parent **design and evolve** the habit set, not just track it: good questions that deepen the parent's understanding of their kid, research-informed suggestions when the parent is unsure, and a habit set that lives — habits graduate when mastered and new ones take their place.
 3. **The parent's ideation problem:** parents don't want to invent bonding activities on the fly. The reward catalog is a **pre-decided menu of shared experiences** (bookshop trip, playground, treasure hunt) — a bonding backlog with star prices on it.
 
 **This three-problem framing is canonical and must reflect across the app.** The manifesto beats, the onboarding slides (one problem per slide), the README, store copy, and any marketing surface all map to these three problems — in any order, but never dropping one. An app surface that tells only the morning-routine story, or only the rewards story, is telling a third of the truth.
@@ -22,12 +22,12 @@ This is **not** a chore-wage app. Stars never buy toys or money. Stars buy *agen
 
 | Field | Value |
 |---|---|
-| Product | StarqueZZ v2 — gamified habit routine + experience rewards |
+| Product | Starquezz v2 — gamified habit routine + experience rewards |
 | Audience | Any family with kids roughly 5–9; open public signup |
 | Founding users | Zen, 8 (reads simple words, loves counting things) and Zia, 5 (joins later) — the reference personas every screen is designed against |
 | Founding parent | Ganis — the reference admin; wants ≤ 2 minutes of app time per week |
 | Business model | None. **Free forever, no monetization, ever.** Published as a public PWA |
-| Predecessor | StarqueZZ v1 (this repo) — working core loop, wrong reward framing |
+| Predecessor | Starquezz v1 (this repo) — working core loop, wrong reward framing |
 
 **Design rule of thumb:** build every feature as if Zen is the only kid and Ganis the only parent — that keeps it sharp — but implement every data path as multi-tenant (it already is, via parent-scoped RLS). Personal in design, public in engineering.
 
@@ -147,7 +147,7 @@ adventures   gains: library_id (nullable), venue_note (parent's own place)
 
 ### 4d. The Habit Library & the living habit set
 
-Tracking habits is the commodity; **designing them is the value.** Most parents can't answer: which habits matter at 5 vs 8, how many a kid can sustain, whether the set is balanced — and a tracker happily lets them assign six chores and zero growth habits. StarqueZZ takes a position.
+Tracking habits is the commodity; **designing them is the value.** Most parents can't answer: which habits matter at 5 vs 8, how many a kid can sustain, whether the set is balanced — and a tracker happily lets them assign six chores and zero growth habits. Starquezz takes a position.
 
 **The Habit Library** — curated, global, read-only (same model as §4c): research-informed habit entries a confused parent can browse and trust.
 
@@ -186,7 +186,7 @@ star_events   reason enum gains: graduation_bonus
 
 ## 5. Screens
 
-**Zee, the mascot (canonical).** A little star sprite — the "ZZ" in Starque**ZZ** is his snooze; he wakes when you tap. Zee narrates the kid side (board encouragements, celebrations) and fronts the Scout on the parent side, giving the whole app one face. **Hard rule: Zee's lines are scripted and authored, never LLM-generated, and the kid never chats with him** — he reacts to the kid's actions, he doesn't converse. This is a UI character, not an AI companion; the "no LLM in the kid loop" non-goal stands.
+**Zee, the mascot (canonical).** A little star sprite — the "zz" in Starquezz is his snooze; he wakes when you tap. Zee narrates the kid side (board encouragements, celebrations) and fronts the Scout on the parent side, giving the whole app one face. **Hard rule: Zee's lines are scripted and authored, never LLM-generated, and the kid never chats with him** — he reacts to the kid's actions, he doesn't converse. This is a UI character, not an AI companion; the "no LLM in the kid loop" non-goal stands.
 
 ### Kid side (Zen's world — playful, loud, almost no reading)
 

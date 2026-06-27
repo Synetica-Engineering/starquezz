@@ -7,7 +7,7 @@ const SLIDES = [
   {
     Art: SceneAutonomy,
     h: 'Their board, not your reminders.',
-    p: 'Your kid checks StarqueZZ instead of asking “what do I need to do?” — the routine becomes theirs, and every check-off pays a star on the spot.',
+    p: 'Your kid checks Starquezz instead of asking “what do I need to do?” — the routine becomes theirs, and every check-off pays a star on the spot.',
   },
   {
     Art: SceneDesign,

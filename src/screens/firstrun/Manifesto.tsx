@@ -5,8 +5,6 @@ import { useState } from 'react'
 import { Zee } from '../../components/Zee'
 
 const LINES = [
-  'The world’s full of pings and of pop-ups and pings.',
-  'StarqueZZ gives your kid their own quest — no more “what do I need to do?”',
   'We help you choose habits that fit your kid — and grow as they do.',
   'And every reward is an adventure you have together.',
 ]
@@ -39,7 +37,7 @@ export function Manifesto({ onProceed }: { onProceed: () => void }) {
             With you in it.
           </div>
           <div className="wordmark" style={{ fontSize: 26 }}>
-            Starque<span className="zz">ZZ</span>
+            Starque<span className="zz">zz</span>
           </div>
           <button className="btn" onClick={onProceed}>
             See how it works →
