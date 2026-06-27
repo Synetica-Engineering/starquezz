@@ -4,7 +4,8 @@
 import { useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useFamily, habitsForChild, graduatedHabits, scheduledOn, isDone } from '../../state/family'
-import { HABIT_ICONS, SqzIcon } from '../../components/icons'
+import { SqzIcon } from '../../components/icons'
+import { HABIT_EMOJIS, HabitIcon } from '../../components/HabitIcon'
 import { Sheet, StarBurst, Toast, useToast } from '../../components/ui'
 import { Zee } from '../../components/Zee'
 import { addDays, todayLocal, BLOCKS, BLOCK_LABEL } from '../../lib/dates'
@@ -33,7 +34,7 @@ interface HabitForm {
 
 const emptyForm = (): HabitForm => ({
   name: '',
-  icon: 'check',
+  icon: '✅',
   category: 'body',
   time_block: 'morning',
   is_core: true,
@@ -185,7 +186,7 @@ export function HabitEditor() {
               {list.map((h) => (
                 <div className="plist-row" key={h.id}>
                   <span className="pr-icon" style={{ color: CAT_COLOR[h.category] }}>
-                    <SqzIcon name={h.icon} size={20} />
+                    <HabitIcon icon={h.icon} size={22} />
                   </span>
                   <span className="col grow" style={{ minWidth: 0 }}>
                     <span className="pr-name">{h.name}</span>
@@ -264,14 +265,14 @@ export function HabitEditor() {
             <div>
               <span className="field-label">Icon</span>
               <div className="icon-grid">
-                {HABIT_ICONS.map((ic) => (
+                {HABIT_EMOJIS.map((ic) => (
                   <button
                     key={ic}
                     className={'icon-cell' + (form.icon === ic ? ' on' : '')}
                     onClick={() => setForm({ ...form, icon: ic })}
                     aria-label={`icon ${ic}`}
                   >
-                    <SqzIcon name={ic} size={20} />
+                    <HabitIcon icon={ic} size={22} />
                   </button>
                 ))}
               </div>
@@ -443,7 +444,7 @@ function HabitLibrarySheet({
           <div className="lib-card" key={h.id}>
             <div className="lc-head">
               <span className="lc-ic" style={{ color: CAT_COLOR[h.category] }}>
-                <SqzIcon name={h.icon} size={21} />
+                <HabitIcon icon={h.icon} size={23} />
               </span>
               <span className="col grow">
                 <span className="lc-name">{h.name}</span>

@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useFamily } from '../../state/family'
 import { SqzIcon, StarToken } from '../../components/icons'
+import { HabitIcon } from '../../components/HabitIcon'
 import { Zee } from '../../components/Zee'
 import { Keypad } from '../../components/ui'
 import { AvatarPicker } from '../../components/AvatarPicker'
@@ -30,31 +31,6 @@ interface HabitChoice {
 const CORE_CATEGORY_ORDER: HabitCategory[] = ['body', 'space', 'mind', 'heart']
 const HABIT_CATEGORIES = new Set<HabitCategory>(['body', 'mind', 'space', 'heart'])
 const TIME_BLOCKS = new Set<TimeBlock>(['morning', 'afternoon', 'evening'])
-const HABIT_ICONS = new Set([
-  'tooth',
-  'shirt',
-  'bowl',
-  'book',
-  'backpack',
-  'drop',
-  'water',
-  'ball',
-  'bed',
-  'bed-made',
-  'music',
-  'pencil',
-  'bulb',
-  'paint',
-  'blocks',
-  'fork',
-  'plant',
-  'heart',
-  'sparkle-heart',
-  'hands',
-  'paw',
-  'dice',
-  'check',
-])
 const AGE_7_8_STARTER_PATTERNS = [
   /pick a 10-minute movement/i,
   /brush and floss/i,
@@ -183,7 +159,7 @@ function fallbackInterestDrafts(interests: string): InterestHabitDraft[] {
   if (/(piano|keyboard)/i.test(lower)) {
     drafts.push({
       name: 'Practice piano keys for 5 minutes',
-      icon: 'music',
+      icon: '🎹',
       category: 'mind',
       time_block: 'afternoon',
       duration_min: 5,
@@ -192,7 +168,7 @@ function fallbackInterestDrafts(interests: string): InterestHabitDraft[] {
   } else if (/(guitar|ukulele|violin|drum|music|sing)/i.test(lower)) {
     drafts.push({
       name: 'Practice instrument for 10 minutes',
-      icon: 'music',
+      icon: '🎵',
       category: 'mind',
       time_block: 'afternoon',
       duration_min: 10,
@@ -202,7 +178,7 @@ function fallbackInterestDrafts(interests: string): InterestHabitDraft[] {
   if (/(count|number|math|lego|block)/i.test(lower)) {
     drafts.push({
       name: 'Count 10 tiny things',
-      icon: 'blocks',
+      icon: '🔢',
       category: 'mind',
       time_block: 'afternoon',
       duration_min: 5,
@@ -210,7 +186,7 @@ function fallbackInterestDrafts(interests: string): InterestHabitDraft[] {
     })
     drafts.push({
       name: 'Solve three tiny math facts',
-      icon: 'pencil',
+      icon: '✏️',
       category: 'mind',
       time_block: 'afternoon',
       duration_min: 5,
@@ -220,7 +196,7 @@ function fallbackInterestDrafts(interests: string): InterestHabitDraft[] {
   if (/(draw|paint|art|color|colour|craft)/i.test(lower)) {
     drafts.push({
       name: 'Draw one tiny picture',
-      icon: 'paint',
+      icon: '🎨',
       category: 'mind',
       time_block: 'afternoon',
       duration_min: 5,
@@ -230,7 +206,7 @@ function fallbackInterestDrafts(interests: string): InterestHabitDraft[] {
   if (/(dino|animal|bug|bird|nature|plant)/i.test(lower)) {
     drafts.push({
       name: 'Notice one nature detail',
-      icon: 'plant',
+      icon: '🌱',
       category: 'mind',
       time_block: 'afternoon',
       duration_min: 5,
@@ -241,7 +217,7 @@ function fallbackInterestDrafts(interests: string): InterestHabitDraft[] {
     drafts.push(
       {
         name: 'Teach a favorite fact',
-        icon: 'bulb',
+        icon: '💡',
         category: 'mind',
         time_block: 'afternoon',
         duration_min: 5,
@@ -249,7 +225,7 @@ function fallbackInterestDrafts(interests: string): InterestHabitDraft[] {
       },
       {
         name: 'Make a tiny interest sketch',
-        icon: 'pencil',
+        icon: '✏️',
         category: 'mind',
         time_block: 'afternoon',
         duration_min: 5,
@@ -257,7 +233,7 @@ function fallbackInterestDrafts(interests: string): InterestHabitDraft[] {
       },
       {
         name: 'Put away one activity set',
-        icon: 'blocks',
+        icon: '🧱',
         category: 'space',
         time_block: 'afternoon',
         duration_min: 5,
@@ -302,7 +278,7 @@ function buildInterestHabitChoices(
     const block = TIME_BLOCKS.has(draft.time_block as TimeBlock)
       ? (draft.time_block as TimeBlock)
       : 'afternoon'
-    const icon = HABIT_ICONS.has(draft.icon ?? '') ? String(draft.icon) : category === 'space' ? 'blocks' : 'bulb'
+    const icon = typeof draft.icon === 'string' && draft.icon.trim() ? draft.icon.trim().slice(0, 8) : category === 'space' ? '🧱' : '💡'
 
     choices.push({
       id: `interest-${slugifyHabit(name) || choices.length}`,
@@ -852,7 +828,7 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
                   onClick={() => toggleHabitChoice(h)}
                 >
                   <span className="pr-icon">
-                    <SqzIcon name={h.icon} size={20} />
+                    <HabitIcon icon={h.icon} size={22} />
                   </span>
                   <span className="col grow">
                     <span className="pr-name">{h.name}</span>

@@ -26,7 +26,7 @@ HABIT PROPOSALS specifically: return EXACTLY 9 candidate habits as a recommendat
 - The LAST 4 must be strong, age-appropriate staples that fit the child even though they weren't discussed (set source="age").
 - These 9 are CANDIDATES, not all active. Among them, mark only a few as is_core following the balance heuristic above (2 cores at age ≤5, 3 at 6-7, ≤4 at 8+); the rest are bonus. The parent accepts the ones they want.
 
-You ask nothing back; you emit proposals via the tool. Each proposal carries a short "why" the parent learns from (research-informed, plainly worded, no citation theater). Use the parent's own words about the kid. Icons must come from the provided icon list.`
+You ask nothing back; you emit proposals via the tool. Each proposal carries a short "why" the parent learns from (research-informed, plainly worded, no citation theater). Use the parent's own words about the kid. Habit icons must be colorful emoji, not icon names.`
 
 const CHAT_SYSTEM = `You are the Scout, a warm setup assistant inside Starquezz — a kids' habit app where stars buy shared family adventures, never toys or money.
 
@@ -75,7 +75,9 @@ const HABIT_TOOL = {
             name: { type: 'string', maxLength: 60 },
             icon: {
               type: 'string',
-              enum: ['tooth', 'shirt', 'bowl', 'book', 'backpack', 'drop', 'water', 'ball', 'bed', 'bed-made', 'music', 'pencil', 'bulb', 'paint', 'blocks', 'fork', 'plant', 'heart', 'sparkle-heart', 'hands', 'paw', 'dice', 'check'],
+              minLength: 1,
+              maxLength: 8,
+              description: 'One colorful emoji that visually represents the habit, such as 🪥, 📚, 🎹, 🧹, 🥤, 🏃, or 💛.',
             },
             category: { type: 'string', enum: ['body', 'mind', 'space', 'heart'] },
             time_block: { type: 'string', enum: ['morning', 'afternoon', 'evening'] },
@@ -115,7 +117,9 @@ const INTEREST_HABIT_TOOL = {
             name: { type: 'string', maxLength: 60 },
             icon: {
               type: 'string',
-              enum: ['tooth', 'shirt', 'bowl', 'book', 'backpack', 'drop', 'water', 'ball', 'bed', 'bed-made', 'music', 'pencil', 'bulb', 'paint', 'blocks', 'fork', 'plant', 'heart', 'sparkle-heart', 'hands', 'paw', 'dice', 'check'],
+              minLength: 1,
+              maxLength: 8,
+              description: 'One colorful emoji that visually represents the habit, such as 🪥, 📚, 🎹, 🧹, 🥤, 🏃, or 💛.',
             },
             category: { type: 'string', enum: ['body', 'mind', 'space', 'heart'] },
             time_block: { type: 'string', enum: ['morning', 'afternoon', 'evening'] },

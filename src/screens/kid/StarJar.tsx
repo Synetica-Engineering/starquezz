@@ -4,6 +4,7 @@
 import { useFamily, graduatedHabits, starDayComplete, displayStreak } from '../../state/family'
 import { mondayOf, todayLocal, weekDates, isoDow, formatDay } from '../../lib/dates'
 import { Constellation, SqzIcon, StarToken } from '../../components/icons'
+import { HabitIcon } from '../../components/HabitIcon'
 import { WeekStrip } from '../../components/ui'
 import { scheduledOn, habitsForChild } from '../../state/family'
 import type { Child } from '../../lib/types'
@@ -109,7 +110,7 @@ export function StarJar({ child, onCeremony }: { child: Child; onCeremony: () =>
             {hall.map((h) => (
               <div className="trophy" key={h.id}>
                 <span className="ticon">
-                  <SqzIcon name={h.icon} size={26} />
+                  <HabitIcon icon={h.icon} size={26} />
                 </span>
                 <span className="tname">{h.name}</span>
               </div>

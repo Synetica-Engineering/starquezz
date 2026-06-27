@@ -5,6 +5,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useFamily, habitsForChild, isDone, scheduledOn } from '../../state/family'
 import { BLOCKS, BLOCK_ICON, BLOCK_LABEL, currentBlock, formatDay, isoDow, todayLocal } from '../../lib/dates'
 import { SqzIcon } from '../../components/icons'
+import { HabitIcon } from '../../components/HabitIcon'
 import { StarFx, StarBurst } from '../../components/ui'
 import { Zee, ZBubble, type ZeeMood } from '../../components/Zee'
 import { playBonus, playCheck, playDailyWin, playLocked } from '../../lib/sound'
@@ -189,7 +190,7 @@ export function Board({
                 </span>
               )}
               <span className="hicon">
-                <SqzIcon name={h.icon} size={25} />
+                <HabitIcon icon={h.icon} size={25} />
               </span>
               <div className="hbody">
                 <div className="hname">{h.name}</div>

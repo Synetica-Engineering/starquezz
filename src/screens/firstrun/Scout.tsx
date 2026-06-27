@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useFamily } from '../../state/family'
 import { SqzIcon, StarToken } from '../../components/icons'
+import { HabitIcon } from '../../components/HabitIcon'
 import { Zee } from '../../components/Zee'
 import { activeDaysForFrequency } from '../../lib/habits'
 import type { HabitCategory, TimeBlock } from '../../lib/types'
@@ -207,7 +208,7 @@ export function ScoutChat({
         }
       })(),
       name: String(h.name).slice(0, 60),
-      icon: typeof h.icon === 'string' && h.icon ? h.icon : 'check',
+      icon: typeof h.icon === 'string' && h.icon ? h.icon : '✅',
       category: (['body', 'mind', 'space', 'heart'] as const).includes(h.category) ? h.category : 'body',
       time_block: (['morning', 'afternoon', 'evening'] as const).includes(h.time_block) ? h.time_block : 'morning',
       is_core: Boolean(h.is_core),
@@ -342,7 +343,7 @@ export function ScoutChat({
     <div className="draftcard" key={kind + idx} style={{ animationDelay: `${idx * 0.09}s`, opacity: state === 'skipped' ? 0.45 : 1 }}>
       <div className="dc-top">
         <span className="dc-ic">
-          <SqzIcon name={icon} size={20} />
+          {kind === 'habit' ? <HabitIcon icon={icon} size={22} /> : <SqzIcon name={icon} size={20} />}
         </span>
         {editing?.kind === kind && editing.idx === idx ? (
           <input
