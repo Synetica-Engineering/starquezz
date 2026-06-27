@@ -1,9 +1,9 @@
 // The Routine Board — answers "what now?", not "what today?".
-// Defaults to the current time block; check-offs are trusted, instant, and
-// reversible for 5 minutes. The check-off must feel better than being told.
-import { useMemo, useRef, useState } from 'react'
+// Shows today's routine in one ordered list; check-offs are trusted, instant,
+// and reversible for 5 minutes. The check-off must feel better than being told.
+import { useMemo, useState } from 'react'
 import { useFamily, habitsForChild, isDone, scheduledOn } from '../../state/family'
-import { BLOCKS, BLOCK_ICON, BLOCK_LABEL, currentBlock, formatDay, isoDow, todayLocal } from '../../lib/dates'
+import { formatDay, isoDow, todayLocal } from '../../lib/dates'
 import { SqzIcon } from '../../components/icons'
 import { HabitIcon } from '../../components/HabitIcon'
 import { StarFx, StarBurst } from '../../components/ui'
@@ -12,6 +12,7 @@ import { playBonus, playCheck, playDailyWin, playLocked } from '../../lib/sound'
 import type { Child, Habit } from '../../lib/types'
 
 type CardState = '' | 'now' | 'done' | 'locked'
+const BLOCK_ORDER: Record<Habit['time_block'], number> = { morning: 0, afternoon: 1, evening: 2 }
 
 export function Board({
   child,
@@ -22,15 +23,17 @@ export function Board({
 }) {
   const fam = useFamily()
   const today = todayLocal()
-  const [blockIdx, setBlockIdx] = useState(() => BLOCKS.indexOf(currentBlock()))
   const [pending, setPending] = useState<Set<string>>(new Set())
   const [zeeMood, setZeeMood] = useState<ZeeMood>('awake')
   const [celebration, setCelebration] = useState<null | { streakBonus: number; streak: number }>(null)
-  const touchX = useRef<number | null>(null)
 
-  const block = BLOCKS[blockIdx]
-  const all = useMemo(() => scheduledOn(habitsForChild(fam.habits, child.id), today), [fam.habits, child.id, today])
-  const blockHabits = all.filter((h) => h.time_block === block)
+  const all = useMemo(
+    () =>
+      [...scheduledOn(habitsForChild(fam.habits, child.id), today)].sort(
+        (a, b) => BLOCK_ORDER[a.time_block] - BLOCK_ORDER[b.time_block] || a.sort_order - b.sort_order,
+      ),
+    [fam.habits, child.id, today],
+  )
   const cores = all.filter((h) => h.is_core)
   const done = (h: Habit) => pending.has(h.id) || isDone(fam.completions, h.id, today)
   const coresDone = cores.length > 0 && cores.every(done)
@@ -139,48 +142,21 @@ export function Board({
   }
 
   return (
-    <div
-      className="view scroll"
-      onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
-      onTouchEnd={(e) => {
-        if (touchX.current == null) return
-        const dx = e.changedTouches[0].clientX - touchX.current
-        touchX.current = null
-        if (dx < -48 && blockIdx < BLOCKS.length - 1) setBlockIdx(blockIdx + 1)
-        if (dx > 48 && blockIdx > 0) setBlockIdx(blockIdx - 1)
-      }}
-    >
-      <div className="blockbar">
-        <span className="bname">
-          <SqzIcon name={BLOCK_ICON[block]} size={19} color="#9FECFF" /> {BLOCK_LABEL[block]}
-        </span>
-        <span className="nav">
-          <button onClick={() => setBlockIdx(blockIdx - 1)} disabled={blockIdx === 0} aria-label="earlier block">
-            ‹
-          </button>
-          <button
-            onClick={() => setBlockIdx(blockIdx + 1)}
-            disabled={blockIdx === BLOCKS.length - 1}
-            aria-label="later block"
-          >
-            ›
-          </button>
-        </span>
-      </div>
-
+    <div className="view scroll">
       <div className="row gap10" style={{ marginBottom: 14 }}>
         <Zee size={42} mood={zeeMood} />
         <ZBubble>{zeeLine()}</ZBubble>
       </div>
 
       <div className="habits">
-        {blockHabits.length === 0 && (
+        {all.length === 0 && (
           <div className="pcard tac muted" style={{ fontSize: 14, padding: 22 }}>
-            Nothing for {BLOCK_LABEL[block].toLowerCase()} — check another block ✦
+            Nothing on the board today ✦
           </div>
         )}
-        {blockHabits.map((h) => {
+        {all.map((h) => {
           const state = withSpotlight(cardState(h))
+          const undoable = state === 'done' && canUndo(h)
           const interactive = state === 'now' || state === ''
           return (
             <div className={'habit ' + state + (!h.is_core && state === 'locked' && coresDone ? ' unlockable' : '')} key={h.id}>
@@ -198,12 +174,12 @@ export function Board({
               </div>
               <button
                 className="hcheck"
-                aria-label={state === 'done' ? `${h.name} done` : `mark ${h.name} done`}
-                onClick={interactive ? (e) => check(h, e.currentTarget) : undefined}
+                aria-label={state === 'done' ? (undoable ? `undo ${h.name}` : `${h.name} done`) : `mark ${h.name} done`}
+                onClick={undoable ? () => undo(h) : interactive ? (e) => check(h, e.currentTarget) : undefined}
               >
                 {state === 'done' && <SqzIcon name="check" size={19} stroke={3} />}
               </button>
-              {state === 'done' && canUndo(h) && (
+              {undoable && (
                 <button className="undo-chip" onClick={() => undo(h)}>
                   oops, undo
                 </button>

@@ -17,7 +17,7 @@ test('full family journey: signup → wizard → kid loop → ceremony → diges
 
   // ---- first-run manifesto: all three problems, then ignition ----
   await expect(page.locator('.manifesto')).toBeVisible()
-  await expect(page.locator('.mline')).toContainText('pings and of pop-ups')
+  await expect(page.locator('.mline')).toContainText('choose habits that fit your kid')
   for (let i = 0; i < 4; i++) {
     await page.locator('.manifesto').click({ position: { x: 100, y: 200 } })
     await page.waitForTimeout(250)
@@ -69,29 +69,18 @@ test('full family journey: signup → wizard → kid loop → ceremony → diges
   await page.locator('.face-pick', { hasText: 'Zen' }).click()
   await expect(page.locator('.greet .nm')).toHaveText('Zen')
 
-  // walk every block and check off every habit (cores first, then bonus)
-  const checkAllInBlock = async () => {
-    for (let i = 0; i < 8; i++) {
-      const open = page.locator('.habit.now .hcheck')
-      if ((await open.count()) === 0) break
-      await open.first().click()
-      await page.waitForTimeout(900)
-      // dismiss a star-day celebration if it fired
-      const celebrate = page.locator('.celebrate .btn')
-      if (await celebrate.isVisible().catch(() => false)) {
-        await expect(page.locator('.celebrate h2')).toContainText('Star-day')
-        await celebrate.click()
-      }
+  // walk the single board and check off every habit (cores first, then bonus)
+  for (let i = 0; i < 12; i++) {
+    const open = page.locator('.habit.now .hcheck')
+    if ((await open.count()) === 0) break
+    await open.first().click()
+    await page.waitForTimeout(900)
+    // dismiss a star-day celebration if it fired
+    const celebrate = page.locator('.celebrate .btn')
+    if (await celebrate.isVisible().catch(() => false)) {
+      await expect(page.locator('.celebrate h2')).toContainText('Star-day')
+      await celebrate.click()
     }
-  }
-  // go to the first block, then sweep forward
-  const prev = page.locator('.blockbar .nav button').first()
-  while (await prev.isEnabled()) await prev.click()
-  for (let b = 0; b < 3; b++) {
-    await checkAllInBlock()
-    const next = page.locator('.blockbar .nav button').nth(1)
-    if (await next.isEnabled()) await next.click()
-    else break
   }
 
   // stars were paid instantly — balance must be positive now
@@ -102,7 +91,7 @@ test('full family journey: signup → wizard → kid loop → ceremony → diges
   const undo = page.locator('.undo-chip').first()
   if (await undo.isVisible().catch(() => false)) {
     const before = Number(await page.locator('.topbar .pill').first().innerText())
-    await undo.click()
+    await page.locator('.habit.done .hcheck').first().click()
     await expect
       .poll(async () => Number(await page.locator('.topbar .pill').first().innerText()))
       .toBeLessThan(before)

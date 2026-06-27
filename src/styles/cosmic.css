@@ -693,6 +693,26 @@ textarea.input { resize: none; min-height: 76px; }
   width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   color: var(--muted); border: 2px dashed var(--line-strong); background: rgba(255, 255, 255, 0.05);
 }
+.setup-choice {
+  min-height: 286px; border: none; cursor: pointer; text-align: left;
+  display: flex; flex-direction: column; align-items: stretch; gap: 12px; justify-content: flex-start;
+}
+.setup-choice-art-wrap {
+  position: relative; width: 100%; aspect-ratio: 16 / 9; display: block; flex: 0 0 auto; overflow: hidden; border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22), inset 0 0 0 1.5px rgba(141, 235, 255, 0.18);
+}
+.setup-choice-art {
+  width: 100%; height: 100%; display: block; object-fit: cover;
+}
+.setup-choice-badge {
+  position: absolute; top: 10px; right: 10px; max-width: calc(100% - 20px);
+  padding: 6px 9px; border-radius: 999px; font-size: 11px; line-height: 1; font-weight: 900;
+  letter-spacing: 0.02em; color: #091432; box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+  white-space: nowrap;
+}
+.setup-choice-badge.research { background: #9FECFF; }
+.setup-choice-badge.ai { background: #FFE27A; }
+.setup-choice-copy { min-height: 82px; }
 .icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
 .icon-cell {
   aspect-ratio: 1; border-radius: 12px; border: none; cursor: pointer;

@@ -599,6 +599,35 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
     onDone()
   }
 
+  const addAnotherKid = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      await fam.refresh()
+      setStep('child')
+      setName('')
+      setBirthYear(thisYear - 7)
+      setInterests('')
+      setAvatar('cat')
+      setPhoto(null)
+      setInterestHabitChoices([])
+      setInterestHabitKey('')
+      setInterestHabitLoading(false)
+      setPickedHabits(new Set())
+      setPickedHabitOrder([])
+      setPickedAdvs(new Set())
+      setPin('')
+      setPinConfirm('')
+      setPinStage('enter')
+      setPinShake(false)
+      setChildId(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not start another setup.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   // pin keypad flow
   if (step === 'pin') {
     const stagePin = pinStage === 'enter' ? pin : pinConfirm
@@ -648,13 +677,16 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
           {name ? `${name}’s board is ready` : 'The board is ready'}
         </div>
         <p className="muted" style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 270, margin: 0 }}>
-          This is where you step back. Hand over the device — the routine is{' '}
-          <b style={{ color: 'var(--gold)' }}>{name || 'theirs'}</b> now. You’ll get the whole week in one
-          glance, every Sunday.
+          Hand over the device now, or set up another kid while you’re already in parent mode.
         </p>
-        <button className="btn full" onClick={finish}>
-          Give it to {name || 'your kid'} ✦
+        <button className="btn full" disabled={busy} onClick={finish}>
+          Hand over to {name || 'your kid'} ✦
         </button>
+        <button className="btn ghost full" disabled={busy} onClick={() => void addAnotherKid()}>
+          Add another kid
+        </button>
+        {error && <div className="form-error">{error}</div>}
+        {busy && <div className="muted">getting ready…</div>}
       </div>
     )
   }
@@ -766,24 +798,45 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
         <>
           <div className="parent-head">
             <Zee size={38} mood="awake" />
-            <span className="pt grow">Build {name}’s routine</span>
+            <span className="pt grow">Build your kid’s routine</span>
           </div>
           <div className="col gap12">
-            <button className="pcard col gap6" style={{ border: 'none', cursor: 'pointer', textAlign: 'left' }} onClick={() => setStep('scout')}>
-              <span className="dname" style={{ fontSize: 18 }}>
-                <SqzIcon name="sparkle" size={19} color="#FFE49C" /> Talk it through with the Scout
+            <button className="pcard setup-choice" onClick={openManualHabits}>
+              <span className="setup-choice-art-wrap">
+                <img
+                  className="setup-choice-art"
+                  src="/illustrations/setup-recommended-habits.jpg"
+                  alt=""
+                  aria-hidden
+                />
+                <span className="setup-choice-badge research">Based on research</span>
               </span>
-              <span className="muted" style={{ fontSize: 13.5, lineHeight: 1.5 }}>
-                Describe {name} in a few sentences — get a habit set and adventure menu tailored to{' '}
-                {age <= 6 ? 'a five-ish-year-old' : `an ${age}-year-old`}, grounded in what research says matters.
+              <span className="setup-choice-copy col gap6">
+                <span className="dname" style={{ fontSize: 17 }}>
+                  I’ll choose from recommended habits
+                </span>
+                <span className="muted" style={{ fontSize: 13.5, lineHeight: 1.45 }}>
+                  Start with age-fit suggestions and tune the list by hand.
+                </span>
               </span>
             </button>
-            <button className="pcard col gap6" style={{ border: 'none', cursor: 'pointer', textAlign: 'left' }} onClick={openManualHabits}>
-              <span className="dname" style={{ fontSize: 18 }}>
-                <SqzIcon name="edit" size={18} color="#9FECFF" /> Skip — I’ll pick myself
+            <button className="pcard setup-choice" onClick={() => setStep('scout')}>
+              <span className="setup-choice-art-wrap">
+                <img
+                  className="setup-choice-art"
+                  src="/illustrations/setup-scout-conversation.jpg"
+                  alt=""
+                  aria-hidden
+                />
+                <span className="setup-choice-badge ai">AI suggestion</span>
               </span>
-              <span className="muted" style={{ fontSize: 13.5, lineHeight: 1.5 }}>
-                Start from a sensible starter set and tweak everything by hand. Two minutes.
+              <span className="setup-choice-copy col gap6">
+                <span className="dname" style={{ fontSize: 17 }}>
+                  Build custom in conversation mode
+                </span>
+                <span className="muted" style={{ fontSize: 13.5, lineHeight: 1.45 }}>
+                  Talk with the Scout and shape a routine around your kid.
+                </span>
               </span>
             </button>
           </div>
