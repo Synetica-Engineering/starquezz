@@ -746,6 +746,7 @@ textarea.input { resize: none; min-height: 76px; }
 
 /* library browser cards */
 .lib-card { border-radius: 16px; overflow: hidden; background: #142146; box-shadow: inset 0 0 0 1.5px var(--line); }
+.lib-card.on { background: #17365a; box-shadow: inset 0 0 0 1.5px rgba(91, 229, 192, 0.45); }
 .lib-card .lc-head { display: flex; align-items: center; gap: 11px; padding: 12px 14px 0; }
 .lib-card .lc-ic { width: 42px; height: 42px; border-radius: 12px; background: rgba(141, 235, 255, 0.14); color: #9fecff; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
 .lib-card .lc-name { font-family: var(--disp); font-weight: 600; font-size: 16px; color: var(--ink); }
