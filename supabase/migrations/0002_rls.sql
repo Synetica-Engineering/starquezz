@@ -1,4 +1,4 @@
--- StarqueZZ v2 · 0002_rls.sql
+-- Starquezz v2 · 0002_rls.sql
 -- Families are fully isolated. Write RLS first, test it (v1 lesson #2).
 -- Kid surfaces run under the parent's auth session on the family device,
 -- so all policies are parent-scoped via auth.uid().
@@ -17,6 +17,9 @@ alter table pin_attempts enable row level security;
 alter table scout_sessions enable row level security;
 alter table habit_library enable row level security;
 alter table library_activities enable row level security;
+
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on all tables in schema public to authenticated;
 
 -- parents: a user sees only their own row. PIN hash is never needed
 -- client-side; it is only touched inside security-definer RPCs.

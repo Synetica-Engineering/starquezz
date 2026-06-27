@@ -1,4 +1,4 @@
--- StarqueZZ v2 · 0003_rpcs.sql
+-- Starquezz v2 · 0003_rpcs.sql
 -- Every star mutation is a single atomic RPC with checks inside the
 -- transaction (v1 lesson #1). The LLM never touches these. Deterministic,
 -- unit-tested code — the trust contract with the kid.

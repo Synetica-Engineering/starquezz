@@ -7,7 +7,7 @@ function SbStatus() {
   return (
     <div className="statusbar">
       <span>9:41</span>
-      <span className="dots"><span>✦ StarqueZZ</span></span>
+      <span className="dots"><span>✦ Starquezz</span></span>
       <span className="dots"><b></b></span>
     </div>
   );

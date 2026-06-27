@@ -1,4 +1,4 @@
-// cosmic_ui.jsx — shared UI for the StarqueZZ Cosmic prototype.
+// cosmic_ui.jsx — shared UI for the Starquezz Cosmic prototype.
 // Reuses SqzIcon, StarToken, Constellation, KidAvatar, sparkPath from icons.jsx.
 // Exports: Zee, TopBar, HabitCard, BottomNav, ZBubble, StarFx (window).
 

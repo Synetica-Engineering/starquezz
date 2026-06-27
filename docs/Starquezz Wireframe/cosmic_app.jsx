@@ -1,4 +1,4 @@
-// cosmic_app.jsx — StarqueZZ Cosmic prototype: state machine, nav, persistence, fx wiring.
+// cosmic_app.jsx — Starquezz Cosmic prototype: state machine, nav, persistence, fx wiring.
 
 const LS = "sqz_cosmic_v1";
 function loadState() {

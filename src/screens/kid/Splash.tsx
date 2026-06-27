@@ -15,7 +15,7 @@ export function Splash({ onDone, resume = false }: { onDone?: () => void; resume
       <div className="splash-mark" style={resume ? { animation: 'none' } : undefined}>
         <Zee size={86} mood={resume ? 'awake' : 'cheer'} />
         <div className="wordmark">
-          Starque<span className="zz">ZZ</span>
+          Starque<span className="zz">zz</span>
         </div>
         {!resume && (
           <div className="muted" style={{ fontSize: 15 }}>

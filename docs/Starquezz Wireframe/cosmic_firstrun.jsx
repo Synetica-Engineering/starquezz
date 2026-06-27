@@ -20,7 +20,7 @@ function Manifesto({ onProceed }) {
         <div className="mfinal-wrap">
           <Zee size={74} mood="cheer" />
           <div className="mfinal">Turn the daily scramble<br />into time together.</div>
-          <div className="wordmark" style={{ fontSize: 26 }}>Starque<span className="zz">ZZ</span></div>
+          <div className="wordmark" style={{ fontSize: 26 }}>Starque<span className="zz">zz</span></div>
           <button className="btn" onClick={onProceed}>See how it works →</button>
         </div>
       )}

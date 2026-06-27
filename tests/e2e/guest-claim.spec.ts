@@ -64,10 +64,8 @@ test('guest → working board → claim with email → data intact', async ({ pa
   // sign out (no guest guard anymore) and sign back in with the credential
   await page.locator('.bottomnav .navitem', { hasText: 'More' }).click()
   await page.getByRole('button', { name: /sign out/i }).click()
-  await expect(page.locator('#email')).toBeVisible({ timeout: 15_000 })
-  // (sign-in form may need switching from signup mode)
-  const signinToggle = page.getByText(/already set up\?/i)
-  if (await signinToggle.isVisible().catch(() => false)) await signinToggle.click()
+  await expect(page.getByRole('button', { name: /start now — no account needed/i })).toBeVisible({ timeout: 15_000 })
+  await page.getByRole('button', { name: /^sign in$/i }).click()
   await page.locator('#email').fill(email)
   await page.locator('#password').fill('claimed-password-1')
   await page.getByRole('button', { name: /^sign in$/i }).click()

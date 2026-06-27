@@ -1,8 +1,8 @@
-# StarqueZZ v2 Implementation Plan
+# Starquezz v2 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build StarqueZZ v2 — a free, multi-tenant, kid-run habit-autonomy PWA with experience rewards — end-to-end from `docs/AGENT_BRIEF.md` (product law) and `docs/DESIGN_BRIEF.md` (Cosmic visual direction), validated with unit, integration, and browser E2E tests.
+**Goal:** Build Starquezz v2 — a free, multi-tenant, kid-run habit-autonomy PWA with experience rewards — end-to-end from `docs/AGENT_BRIEF.md` (product law) and `docs/DESIGN_BRIEF.md` (Cosmic visual direction), validated with unit, integration, and browser E2E tests.
 
 **Architecture:** React 19 + Vite + TypeScript SPA styled with Tailwind v4 + the Cosmic design system (ported from `docs/Starquezz Wireframe/cosmic.css`). All data and auth in Supabase (local stack for dev/test): Postgres schema with parent-scoped RLS, and **every star mutation as an atomic SECURITY DEFINER RPC** (the v1 lesson). Desktop renders the app inside a phone device frame (like cloudloyalty / central-membership-app's DeviceStage); on real phones it flows naturally full-viewport. PWA via vite-plugin-pwa.
 
