@@ -1,4 +1,4 @@
--- StarqueZZ v2 · 0004_libraries.sql
+-- Starquezz v2 · 0004_libraries.sql
 -- Global, curated, read-only libraries. Drafted with LLM help, curated by
 -- hand. No user-generated content pipeline, ever (AGENT_BRIEF §6).
 

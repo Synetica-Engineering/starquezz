@@ -1,4 +1,4 @@
--- StarqueZZ v2 · 0001_schema.sql
+-- Starquezz v2 · 0001_schema.sql
 -- Tables, enums, indexes. The star ledger is the source of truth;
 -- children.star_balance is a cached aggregate updated only inside RPCs.
 

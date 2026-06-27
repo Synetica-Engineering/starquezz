@@ -212,7 +212,7 @@ export function Settings({ onAddChild }: { onAddChild: () => void }) {
         </div>
 
         <div className="muted tac" style={{ fontSize: 12, lineHeight: 1.6, paddingBottom: 8 }}>
-          StarqueZZ is free for every family, forever.
+          Starquezz is free for every family, forever.
           <br />
           Built with ❤️ by Synetica.
         </div>

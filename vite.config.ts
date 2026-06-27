@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'StarqueZZ',
-        short_name: 'StarqueZZ',
+        name: 'Starquezz',
+        short_name: 'Starquezz',
         description:
           'Your kid runs their own routine. Stars buy adventures together — never toys or money. Free forever.',
         theme_color: '#0E1336',

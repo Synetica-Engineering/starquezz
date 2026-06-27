@@ -1,4 +1,4 @@
-# STATUS — StarqueZZ v2
+# STATUS — Starquezz v2
 
 > One status file, updated in the same commit as the feature (AGENT_BRIEF §8.5).
 > Last update: 2026-06-12

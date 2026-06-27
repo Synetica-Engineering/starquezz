@@ -1,5 +1,5 @@
 // dir_cosmic.jsx — Direction B: deep night sky, glowing constellations. WITH mascot "Zee".
-// Zee = a little star sprite; the "ZZ" in StarqueZZ is his snooze. He wakes when you tap.
+// Zee = a little star sprite; the "zz" in Starquezz is his snooze. He wakes when you tap.
 // Exports CosmicBoard, CosmicDream to window.
 
 const CZ_CONSTEL = { line: "#7FA0FF", filled: "#FFD66B", faint: "#9FB0E8", glow: true };

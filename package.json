@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "StarqueZZ v2 \u2014 gamified habit routine + experience rewards. Free forever.",
+  "description": "Starquezz v2 \u2014 gamified habit routine + experience rewards. Free forever.",
   "packageManager": "pnpm@10.32.1",
   "scripts": {
     "dev": "vite",

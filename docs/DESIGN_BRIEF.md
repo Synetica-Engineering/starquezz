@@ -1,6 +1,6 @@
-# StarqueZZ v2 — Design Agent Brief
+# Starquezz v2 — Design Agent Brief
 
-> **Purpose of this document:** complete context for a design agent producing the screens, flows, and motion design for StarqueZZ v2. Read [AGENT_BRIEF.md](AGENT_BRIEF.md) first — it is the product source of truth (concept, principles, star economy, screen logic). This brief covers what that one doesn't: visual direction, the full screen/flow inventory including splash and onboarding, the delight & animation system, and expected deliverables.
+> **Purpose of this document:** complete context for a design agent producing the screens, flows, and motion design for Starquezz v2. Read [AGENT_BRIEF.md](AGENT_BRIEF.md) first — it is the product source of truth (concept, principles, star economy, screen logic). This brief covers what that one doesn't: visual direction, the full screen/flow inventory including splash and onboarding, the delight & animation system, and expected deliverables.
 >
 > **Rule zero:** nothing you design may violate the four principles in AGENT_BRIEF §2. In particular: never render copy or imagery implying a child *earns time with a parent* — stars pick *which* adventure, never *whether*.
 
@@ -8,7 +8,7 @@
 
 ## 0. Goal & objectives of the app
 
-**StarqueZZ turns a kid's daily routine into a self-run quest, and turns the rewards into shared experiences with their parents.** It is a free, published web app (PWA), designed first for one real family — Zen (8) and Zia (5) — and built to work for any family.
+**Starquezz turns a kid's daily routine into a self-run quest, and turns the rewards into shared experiences with their parents.** It is a free, published web app (PWA), designed first for one real family — Zen (8) and Zia (5) — and built to work for any family.
 
 The app exists to solve **three problems** at once (canonical framing — see AGENT_BRIEF §1):
 
@@ -65,7 +65,7 @@ One app, two emotional registers:
 | Criterion | Test |
 |---|---|
 | **Two registers, one world** | The style must turn *up* for the kid and *down* for the parent and still feel like one app |
-| **Ownable** | A screenshot is recognizable as StarqueZZ with the logo covered; doesn't resemble existing kids/chore apps |
+| **Ownable** | A screenshot is recognizable as Starquezz with the logo covered; doesn't resemble existing kids/chore apps |
 | **Kid-legible** | Big shapes, high contrast, icon-first; works for a pre-reader (Zia, 5) |
 | **Motion-native** | The style implies a motion language — the delight system (§4) must feel like it grew from the visuals, not bolted on |
 | **Illustration-driven** | Supports a consistent illustration style across adventure cards, avatars, empty states, onboarding — illustration is a primary delight carrier |
@@ -93,7 +93,7 @@ The splash is not one screen; it is two jobs. The **first open ever** is a paren
 
 > We live in the most distracting world ever built. *(the quiet truth)*
 >
-> StarqueZZ gives your kid their own quest — no more "what do I need to do?" *(problem 1: kid autonomy)*
+> Starquezz gives your kid their own quest — no more "what do I need to do?" *(problem 1: kid autonomy)*
 >
 > We help you choose habits that fit your kid — and grow as they do. *(problem 2: habit design)*
 >
@@ -106,7 +106,7 @@ The visual register starts calm and grown-up (this is the parent's moment), and 
 | Aspect | Spec |
 |---|---|
 | Duration | < 2 seconds, never blocks on network; doubles as the PWA launch screen |
-| Content | StarqueZZ logo/wordmark + signature star motif |
+| Content | Starquezz logo/wordmark + signature star motif |
 | Motion | One delightful beat — e.g. a star streaks in, lands, bursts into the wordmark. The app's "hello," not a speech |
 | Variants | Cold start (full beat) vs. resume (instant, no animation). Reduced-motion: simple fade — applies to the manifesto too (static lines, no choreography) |
 

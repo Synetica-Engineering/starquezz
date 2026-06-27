@@ -1,4 +1,4 @@
-// icons.jsx — shared SVG icon set + constellation renderer for StarqueZZ hi-fi directions.
+// icons.jsx — shared SVG icon set + constellation renderer for Starquezz hi-fi directions.
 // Friendly single-stroke icons (placeholders for future custom illustration).
 // Exported to window for use across direction files.
 

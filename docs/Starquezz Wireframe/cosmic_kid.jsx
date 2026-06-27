@@ -1,4 +1,4 @@
-// cosmic_kid.jsx — kid-facing screens for the StarqueZZ Cosmic prototype.
+// cosmic_kid.jsx — kid-facing screens for the Starquezz Cosmic prototype.
 // Exports: HABITS, CONSTEL, Splash, Login, Board, StarJar, Adventure, Ceremony.
 
 const CONSTEL = { line: "#7FA0FF", filled: "#FFD66B", faint: "#9FB0E8", glow: true };
@@ -32,7 +32,7 @@ function Splash({ onDone }) {
     <div className="view full" onClick={onDone} style={{ cursor: "pointer" }}>
       <div className="splash-mark">
         <Zee size={86} mood="awake" />
-        <div className="wordmark">Starque<span className="zz">ZZ</span></div>
+        <div className="wordmark">Starque<span className="zz">zz</span></div>
         <div className="muted" style={{ fontSize: 15 }}>a playful morning, together</div>
       </div>
     </div>
