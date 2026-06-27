@@ -133,12 +133,17 @@ export function FamilyProvider({ children: kids }: { children: ReactNode }) {
   useEffect(() => {
     void refresh()
     // libraries are global + static: load once
-    void fetchAll<HabitLibraryEntry>(supabase.from('habit_library').select('*').order('category')).then(
-      setHabitLibrary,
-    )
+    void fetchAll<HabitLibraryEntry>(
+      supabase
+        .from('habit_library')
+        .select('*')
+        .order('age_min')
+        .order('category')
+        .order('name'),
+    ).then((rows) => setHabitLibrary(rows.filter((h) => h.is_active !== false)))
     void fetchAll<LibraryActivity>(
       supabase.from('library_activities').select('*').order('suggested_tier'),
-    ).then(setActivityLibrary)
+    ).then((rows) => setActivityLibrary(rows.filter((a) => a.is_active !== false)))
   }, [refresh])
 
   const rpc = useCallback(

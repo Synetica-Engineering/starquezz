@@ -269,7 +269,7 @@ Do not build any of these, even as stubs:
 | Data/auth | Supabase: Auth, Postgres + RLS, RPCs | See lessons in §8 — RLS and atomicity are where v1 got burned |
 | Hosting | Vercel, auto-deploy on push to `main` | |
 | Form factor | PWA (installable, offline-tolerant for the kid view) | The board is checked daily on a shared tablet/phone |
-| LLM (Scout only) | Claude API via a Supabase Edge Function (key server-side), structured output / tool use | Cheap fast model (Haiku-class) is enough; calls are rare (setup + occasional refresh), cost ≈ zero. The kid loop makes no LLM calls |
+| LLM (Scout only) | DeepSeek V4 Flash via a Supabase Edge Function (key server-side), structured output / tool use | Cheap fast model is enough; calls are rare (setup + occasional refresh), cost ≈ zero. The kid loop makes no LLM calls |
 | Testing | Vitest + Testing Library | Star economy and streak logic must be unit-tested — they're the trust contract with the kid |
 
 ### Data model sketch

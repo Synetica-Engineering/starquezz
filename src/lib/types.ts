@@ -94,6 +94,7 @@ export interface Dream {
 
 export interface HabitLibraryEntry {
   id: string
+  library_key?: string | null
   name: string
   icon: string
   kid_label: string
@@ -101,12 +102,19 @@ export interface HabitLibraryEntry {
   age_min: number
   age_max: number
   why_it_matters: string
+  sources_note?: string
   suggested_block: TimeBlock
+  suggested_frequency?: string
+  duration_min?: number
+  evidence_level?: string
+  source_urls?: string
+  is_active?: boolean
   mastery_signal: string
 }
 
 export interface LibraryActivity {
   id: string
+  activity_key?: string | null
   name: string
   illustration: string
   explainer: string
@@ -118,6 +126,10 @@ export interface LibraryActivity {
   cost: 'free' | 'cheap' | 'spendy'
   location_type: string
   suggested_tier: number
+  category?: string
+  why_good_reward?: string
+  source_urls?: string
+  is_active?: boolean
 }
 
 export interface ParentEdit {
