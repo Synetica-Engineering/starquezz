@@ -17,10 +17,10 @@ type KidScreen = 'splash' | 'select' | 'code' | 'board' | 'jar' | 'adventures'
 const ACTIVE_KEY = 'sqz_active_child'
 const SEEN_SPLASH = 'sqz_splash_seen' // session-scoped: cold start vs resume
 
-export function KidShell({ onParent }: { onParent: () => void }) {
+export function KidShell({ onParent, handoffChildId }: { onParent: () => void; handoffChildId?: string | null }) {
   const fam = useFamily()
   const [screen, setScreen] = useState<KidScreen>('splash')
-  const [activeId, setActiveId] = useState<string | null>(() => localStorage.getItem(ACTIVE_KEY))
+  const [activeId, setActiveId] = useState<string | null>(() => handoffChildId ?? localStorage.getItem(ACTIVE_KEY))
   const [waving, setWaving] = useState<string | null>(null)
   const [codeShake, setCodeShake] = useState(false)
   const [code, setCode] = useState('')
@@ -29,6 +29,11 @@ export function KidShell({ onParent }: { onParent: () => void }) {
   const starRef = useRef<HTMLButtonElement>(null)
 
   const active = fam.children.find((c) => c.id === activeId) ?? null
+  const awaitingHandoffChild = Boolean(handoffChildId && activeId === handoffChildId && !active)
+
+  useEffect(() => {
+    if (handoffChildId) setActiveId(handoffChildId)
+  }, [handoffChildId])
 
   useEffect(() => {
     if (activeId) localStorage.setItem(ACTIVE_KEY, activeId)
@@ -132,10 +137,12 @@ export function KidShell({ onParent }: { onParent: () => void }) {
     )
   }
 
-  if (!active) {
+  if (!active && !awaitingHandoffChild) {
     setScreen('select')
     return null
   }
+
+  if (!active) return <Splash resume />
 
   const navIcon = (id: KidScreen, label: string, icon: React.ReactNode) => (
     <button className={'navitem' + (screen === id ? ' active' : '')} onClick={() => setScreen(id)} aria-label={label}>

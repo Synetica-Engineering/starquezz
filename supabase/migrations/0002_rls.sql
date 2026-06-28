@@ -53,7 +53,7 @@ create policy adventures_all on adventures for all
 create policy planned_select on planned_adventures for select
   using (exists (select 1 from children c where c.id = planned_adventures.child_id and c.parent_id = auth.uid()));
 
--- dreams: parent-created/edited (single active slot enforced by index)
+-- dreams: parent-created/edited
 create policy dreams_all on dreams for all
   using (exists (select 1 from children c where c.id = dreams.child_id and c.parent_id = auth.uid()))
   with check (exists (select 1 from children c where c.id = dreams.child_id and c.parent_id = auth.uid()));

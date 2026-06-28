@@ -9,6 +9,7 @@ export interface Parent {
   email: string
   parent_pin_hash: string | null
   ceremony_reminder: boolean
+  silly_mode: boolean
 }
 
 export interface Child {
@@ -128,6 +129,23 @@ export interface LibraryActivity {
   suggested_tier: number
   category?: string
   why_good_reward?: string
+  source_urls?: string
+  is_active?: boolean
+}
+
+export interface SillyActivity {
+  id: string
+  silly_key: string
+  name: string
+  category: string
+  kid_prompt: string
+  materials: string
+  duration_min: number
+  energy: 'indoor' | 'outdoor' | 'either'
+  location_type: string
+  grownup_optional: boolean
+  why_it_adds_joy?: string
+  source_note?: string
   source_urls?: string
   is_active?: boolean
 }

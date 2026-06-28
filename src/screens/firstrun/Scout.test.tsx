@@ -100,6 +100,7 @@ const mockFamily: FamilyState = {
     }),
   ],
   activityLibrary: [],
+  sillyLibrary: [],
   refresh: vi.fn(),
   completeHabit: vi.fn(),
   undoCompletion: vi.fn(),

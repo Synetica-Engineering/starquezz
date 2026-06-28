@@ -25,6 +25,7 @@ import type {
   Parent,
   ParentEdit,
   PlannedAdventure,
+  SillyActivity,
   StarEvent,
   WeekFinalization,
 } from '../lib/types'
@@ -43,6 +44,7 @@ export interface FamilyState {
   parentEdits: ParentEdit[]
   habitLibrary: HabitLibraryEntry[]
   activityLibrary: LibraryActivity[]
+  sillyLibrary: SillyActivity[]
   refresh: () => Promise<void>
   // kid loop
   completeHabit: (habitId: string) => Promise<CompleteResult>
@@ -81,6 +83,7 @@ export function FamilyProvider({ children: kids }: { children: ReactNode }) {
   const [parentEdits, setParentEdits] = useState<ParentEdit[]>([])
   const [habitLibrary, setHabitLibrary] = useState<HabitLibraryEntry[]>([])
   const [activityLibrary, setActivityLibrary] = useState<LibraryActivity[]>([])
+  const [sillyLibrary, setSillyLibrary] = useState<SillyActivity[]>([])
 
   const refresh = useCallback(async () => {
     const since = addDays(todayLocal(), -120)
@@ -144,6 +147,9 @@ export function FamilyProvider({ children: kids }: { children: ReactNode }) {
     void fetchAll<LibraryActivity>(
       supabase.from('library_activities').select('*').order('suggested_tier'),
     ).then((rows) => setActivityLibrary(rows.filter((a) => a.is_active !== false)))
+    void fetchAll<SillyActivity>(
+      supabase.from('library_silly_activities').select('*').order('silly_key'),
+    ).then((rows) => setSillyLibrary(rows.filter((a) => a.is_active !== false)))
   }, [refresh])
 
   const rpc = useCallback(
@@ -170,6 +176,7 @@ export function FamilyProvider({ children: kids }: { children: ReactNode }) {
       parentEdits,
       habitLibrary,
       activityLibrary,
+      sillyLibrary,
       refresh,
       completeHabit: async (habitId) => {
         const res = await rpc<CompleteResult>('complete_habit', {
@@ -225,7 +232,7 @@ export function FamilyProvider({ children: kids }: { children: ReactNode }) {
     }),
     [
       loading, parent, childRows, habits, completions, starEvents, adventures, planned, dreams,
-      weekFinalizations, parentEdits, habitLibrary, activityLibrary, refresh, rpc,
+      weekFinalizations, parentEdits, habitLibrary, activityLibrary, sillyLibrary, refresh, rpc,
     ],
   )
 

@@ -42,30 +42,30 @@ function add(group, minAge, maxAge, name, category, illustration, explainer, pre
 }
 
 const all = [
-  ['Blanket Fort Story Night', 'play', 'fort', 'Build a blanket fort together, crawl in, and read or invent stories by flashlight.', 'Blankets, pillows, flashlight', 35, 'indoor', 'free', 'home', 1, ['play', 'aapDigital']],
-  ['Kitchen Dance Party', 'play', 'disco', 'The kid chooses five songs, everyone dances, then you invent one family signature move.', 'Speaker or phone for music', 20, 'indoor', 'free', 'home', 1, ['play', 'aapDigital']],
-  ['Indoor Picnic Dinner', 'connection', 'basket', 'Spread a blanket on the floor and eat a simple dinner picnic-style, with the kid choosing the picnic spot.', 'Blanket, simple food', 35, 'indoor', 'free', 'home', 1, ['cdc', 'aapDigital']],
-  ['Pancake Helper Morning', 'autonomy', 'pancake', 'The kid helps mix batter and decorate pancakes while the adult handles the stove.', 'Ingredients, safe helper job', 40, 'indoor', 'cheap', 'home', 0, ['cdc']],
-  ['Flashlight Treasure Hunt', 'play', 'flashlight', 'Hide five small objects and give picture clues or simple riddles to find them.', 'Flashlight, five objects', 25, 'indoor', 'free', 'home', 1, ['play']],
-  ['Nature Color Hunt', 'movement', 'leaf', 'Walk outside and find one thing for each color of the rainbow, then take a family photo of the finds.', 'Color list', 35, 'outdoor', 'free', 'park or neighborhood', 1, ['physical', 'play']],
-  ['Playground Monster Chase', 'movement', 'swing', 'Visit a playground and play as the friendly monster who chases, freezes, and lets the child escape.', 'Nothing', 45, 'outdoor', 'free', 'playground', 1, ['physical', 'cdc']],
-  ['Library Pick Three', 'learning', 'library', 'Go to the library and let the child choose any three books to bring home or read together.', 'Library card', 45, 'indoor', 'free', 'library', 1, ['library', 'cdc']],
-  ['Paper Plane Championship', 'learning', 'plane', 'Fold paper planes together and run distance, target, and trick-shot contests.', 'Paper, tape target', 25, 'indoor', 'free', 'home', 1, ['play']],
-  ['Family Board Game Pick', 'connection', 'dice', 'The child picks the game and the grown-up gives full attention for one complete round.', 'Board or card game', 30, 'indoor', 'free', 'home', 1, ['reinforcement', 'play']],
-  ['Backyard Bubbles Lab', 'learning', 'flask', 'Mix bubble solution, test wand shapes, and crown the biggest bubble of the day.', 'Bubble mix or soap, wand', 30, 'outdoor', 'cheap', 'home or park', 1, ['play']],
-  ['Chalk Art Gallery', 'learning', 'paint', 'Make sidewalk chalk art together and give each drawing a gallery title.', 'Chalk', 30, 'outdoor', 'cheap', 'sidewalk or driveway', 1, ['play']],
-  ['Stuffed Animal Tea Party', 'play', 'cupcake', 'Set up a pretend tea party where the child assigns every guest a voice and role.', 'Cups, snack optional', 25, 'indoor', 'free', 'home', 1, ['play']],
-  ['Sunset Pajama Walk', 'connection', 'sunrise', 'Take a short walk near sunset in pajamas or cozy clothes and name three things from the day.', 'Coats if needed', 20, 'outdoor', 'free', 'neighborhood', 1, ['cdc', 'aapDigital']],
-  ['Build a Box Rocket', 'learning', 'plane', 'Turn a box into a rocket, boat, or time machine, then take a pretend trip.', 'Cardboard box, crayons', 35, 'indoor', 'free', 'home', 1, ['play']],
-  ['Mini Obstacle Course', 'movement', 'ball', 'Build a safe obstacle course from cushions, tape lines, and chairs, then run it together.', 'Cushions, tape', 25, 'indoor', 'free', 'home', 1, ['physical', 'play']],
-  ['Garden Water Helper', 'autonomy', 'water', 'The child waters plants with you and chooses one plant to check on next time.', 'Watering can', 20, 'outdoor', 'free', 'home or community garden', 1, ['cdc']],
-  ['Bookshop Browse With Price Cap', 'learning', 'bookshop', 'Browse slowly and let the child choose one book within a parent-set price cap.', 'Price cap', 45, 'indoor', 'cheap', 'bookshop', 2, ['library', 'autonomy']],
-  ['Swimming Play Session', 'movement', 'swim', 'A pool session focused on play: races, floating, jumps, and the child picking the first game.', 'Swim gear', 75, 'either', 'cheap', 'pool', 2, ['physical']],
-  ['Tiny Train or Bus Ride', 'autonomy', 'train', 'Ride one short public-transit route just for the adventure, with the child helping spot stops.', 'Fare, route plan', 45, 'either', 'cheap', 'transit route', 2, ['cdc']],
-  ['Home Mystery Treasure Map', 'play', 'scroll', 'Design a map, hide clues, and let the child solve a real mystery around home or a nearby park.', 'Map, 5 clues, small prize note', 75, 'either', 'cheap', 'home or park', 3, ['play', 'reinforcement']],
-  ['Museum Mini Mission', 'learning', 'museum', 'Visit a museum or gallery with a kid-led mission: pick three favorites, sketch one, and tell the story of one object.', 'Tickets if needed, sketchbook', 120, 'indoor', 'spendy', 'museum or gallery', 3, ['cdc', 'library']],
-  ['Family Day Trip Explorer', 'autonomy', 'train', 'Take a half-day trip somewhere new, with the child helping choose snacks, route, and the first stop.', 'Route, snacks, budget', 240, 'either', 'spendy', 'day-trip spot', 3, ['cdc', 'physical']],
-  ['Backyard or Living-room Campout', 'play', 'campfire', 'Set up a real-feeling campout with sleeping bags, torch stories, and breakfast in the tent or fort.', 'Tent or blankets, sleeping bags', 120, 'either', 'free', 'home', 3, ['play', 'aapDigital']],
+  ['Blanket Fort Story Night', 'play', 'fort', 'Build a cozy blanket fort with your grown-up. Crawl inside, turn on the flashlight, and make up a story in your secret hideout.', 'Blankets, pillows, flashlight', 35, 'indoor', 'free', 'home', 1, ['play', 'aapDigital']],
+  ['Kitchen Dance Party', 'play', 'disco', 'Pick five songs, turn the kitchen into a dance floor, and invent one silly family dance move together.', 'Speaker or phone for music', 20, 'indoor', 'free', 'home', 1, ['play', 'aapDigital']],
+  ['Indoor Picnic Dinner', 'connection', 'basket', 'Spread a blanket on the floor and have dinner picnic-style. You get to choose the perfect picnic spot at home.', 'Blanket, simple food', 35, 'indoor', 'free', 'home', 1, ['cdc', 'aapDigital']],
+  ['Pancake Helper Morning', 'autonomy', 'pancake', 'Help mix pancake batter and decorate your pancakes. Your grown-up handles the hot stove while you make breakfast feel special.', 'Ingredients, safe helper job', 40, 'indoor', 'cheap', 'home', 0, ['cdc']],
+  ['Flashlight Treasure Hunt', 'play', 'flashlight', 'Grab a flashlight and follow clues to find hidden treasures around home. Can you solve the last clue?', 'Flashlight, five objects', 25, 'indoor', 'free', 'home', 1, ['play']],
+  ['Nature Color Hunt', 'movement', 'leaf', 'Head outside and hunt for every color of the rainbow. Line up your finds and snap a family photo at the end.', 'Color list', 35, 'outdoor', 'free', 'park or neighborhood', 1, ['physical', 'play']],
+  ['Playground Monster Chase', 'movement', 'swing', 'Go to the playground and play monster chase. Freeze, escape, and run like the giggles are chasing you.', 'Nothing', 45, 'outdoor', 'free', 'playground', 1, ['physical', 'cdc']],
+  ['Library Pick Three', 'learning', 'library', 'Go to the library and choose three books to bring home or read together. You are the book boss today.', 'Library card', 45, 'indoor', 'free', 'library', 1, ['library', 'cdc']],
+  ['Paper Plane Championship', 'learning', 'plane', 'Fold paper planes together, then test which one flies farthest, hits the target, or does the wildest trick.', 'Paper, tape target', 25, 'indoor', 'free', 'home', 1, ['play']],
+  ['Family Board Game Pick', 'connection', 'dice', 'Pick the board game or card game. Your grown-up gives full attention for one whole round.', 'Board or card game', 30, 'indoor', 'free', 'home', 1, ['reinforcement', 'play']],
+  ['Backyard Bubbles Lab', 'learning', 'flask', 'Mix bubbles, try different wand shapes, and crown the biggest bubble of the day. Pop, float, repeat.', 'Bubble mix or soap, wand', 30, 'outdoor', 'cheap', 'home or park', 1, ['play']],
+  ['Chalk Art Gallery', 'learning', 'paint', 'Turn the sidewalk or driveway into an art gallery. Draw together, then give every masterpiece a fancy title.', 'Chalk', 30, 'outdoor', 'cheap', 'sidewalk or driveway', 1, ['play']],
+  ['Stuffed Animal Tea Party', 'play', 'cupcake', 'Set up a pretend tea party for your stuffed animals. Give every guest a voice, a job, and a tiny bit of drama.', 'Cups, snack optional', 25, 'indoor', 'free', 'home', 1, ['play']],
+  ['Sunset Pajama Walk', 'connection', 'sunrise', 'Put on pajamas or cozy clothes and take a sunset walk together. Name three good things from the day before heading home.', 'Coats if needed', 20, 'outdoor', 'free', 'neighborhood', 1, ['cdc', 'aapDigital']],
+  ['Build a Box Rocket', 'learning', 'plane', 'Turn a cardboard box into a rocket, boat, or time machine. Climb aboard and take a pretend trip together.', 'Cardboard box, crayons', 35, 'indoor', 'free', 'home', 1, ['play']],
+  ['Mini Obstacle Course', 'movement', 'ball', 'Build a safe obstacle course with cushions, tape lines, and chairs. Run it, crawl it, then beat your best time.', 'Cushions, tape', 25, 'indoor', 'free', 'home', 1, ['physical', 'play']],
+  ['Garden Water Helper', 'autonomy', 'water', 'Water the plants at home or in the garden with Mom or Dad. Give each thirsty plant a little splash and choose one to check next time.', 'Watering can', 20, 'outdoor', 'free', 'home or community garden', 1, ['cdc']],
+  ['Bookshop Browse With Price Cap', 'learning', 'bookshop', 'Browse the bookshop slowly and choose one book within the grown-up price cap. Hunt for a story you cannot wait to open.', 'Price cap', 45, 'indoor', 'cheap', 'bookshop', 2, ['library', 'autonomy']],
+  ['Swimming Play Session', 'movement', 'swim', 'Jump into pool play with races, floating, silly jumps, and the first game picked by you.', 'Swim gear', 75, 'either', 'cheap', 'pool', 2, ['physical']],
+  ['Tiny Train or Bus Ride', 'autonomy', 'train', 'Ride one short train or bus route just for fun. Help spot the stops, windows, signs, and tiny surprises along the way.', 'Fare, route plan', 45, 'either', 'cheap', 'transit route', 2, ['cdc']],
+  ['Home Mystery Treasure Map', 'play', 'scroll', 'Follow a mystery map around home or a nearby park. Crack the clues and solve the adventure together.', 'Map, 5 clues, small prize note', 75, 'either', 'cheap', 'home or park', 3, ['play', 'reinforcement']],
+  ['Museum Mini Mission', 'learning', 'museum', 'Visit a museum or gallery with a mission: pick three favorites, sketch one, and tell the story of one amazing thing.', 'Tickets if needed, sketchbook', 120, 'indoor', 'spendy', 'museum or gallery', 3, ['cdc', 'library']],
+  ['Family Day Trip Explorer', 'autonomy', 'train', 'Head somewhere new for a half-day adventure. Help choose snacks, the route, and the very first stop.', 'Route, snacks, budget', 240, 'either', 'spendy', 'day-trip spot', 3, ['cdc', 'physical']],
+  ['Backyard or Living-room Campout', 'play', 'campfire', 'Set up a campout in the backyard or living room. Bring sleeping bags, tell torch stories, and wake up to a tiny camp breakfast.', 'Tent or blankets, sleeping bags', 120, 'either', 'free', 'home', 3, ['play', 'aapDigital']],
 ]
 
 const ages = [
@@ -79,8 +79,11 @@ for (const [group, min, max] of ages) {
   for (const item of all) {
     const [name, category, icon, prompt, prep, duration, energy, cost, location, tier, sourceKeys] = item
     const adjustedName = min >= 9 && name === 'Stuffed Animal Tea Party' ? 'Cafe at Home' : name
+    const adjustedPrompt = min >= 9 && name === 'Stuffed Animal Tea Party'
+      ? 'Set up a pretend cafe at home. Give every guest a voice, a job, and a tiny bit of drama.'
+      : prompt
     const adjustedTier = min >= 11 && tier === 1 && cost !== 'free' ? 2 : tier
-    add(group, min, max, adjustedName, category, icon, prompt, prep, duration, energy, cost, location, adjustedTier, sourceKeys)
+    add(group, min, max, adjustedName, category, icon, adjustedPrompt, prep, duration, energy, cost, location, adjustedTier, sourceKeys)
   }
 }
 

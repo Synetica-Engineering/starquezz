@@ -261,7 +261,7 @@ function buildAdventureChoices(library: LibraryActivity[], age: number): Library
 
 type Step = 'child' | 'path' | 'scout' | 'habits' | 'adventures' | 'pin' | 'handoff'
 
-export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild: boolean }) {
+export function Wizard({ onDone, firstChild }: { onDone: (childId?: string) => void; firstChild: boolean }) {
   const fam = useFamily()
   const thisYear = new Date().getFullYear()
 
@@ -552,8 +552,10 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
   }
 
   const finish = async () => {
+    const targetChildId = childId
+    if (targetChildId) localStorage.setItem('sqz_active_child', targetChildId)
     await fam.refresh()
-    onDone()
+    onDone(targetChildId ?? undefined)
   }
 
   const addAnotherKid = async () => {
@@ -871,7 +873,7 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
                     <span className="pr-sub">
                       {h.suggestedFrequency ?? 'daily'} · {h.durationMin ?? 10} min ·{' '}
                       {h.source === 'interest' ? 'from interests · ' : ''}
-                      {h.core ? 'core set · +1 ✦' : 'bonus · +1 ✦'}
+                      {h.core ? 'core habit' : 'bonus · +1 ✦'}
                     </span>
                   </span>
                   <span className={'toggle' + (on ? ' on' : '')} aria-hidden />

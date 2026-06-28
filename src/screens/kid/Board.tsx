@@ -1,7 +1,7 @@
 // The Routine Board — answers "what now?", not "what today?".
 // Shows today's routine in one ordered list; check-offs are trusted, instant,
 // and reversible for 5 minutes. The check-off must feel better than being told.
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useFamily, habitsForChild, isDone, scheduledOn } from '../../state/family'
 import { formatDay, isoDow, todayLocal } from '../../lib/dates'
 import { SqzIcon } from '../../components/icons'
@@ -9,10 +9,20 @@ import { HabitIcon } from '../../components/HabitIcon'
 import { StarFx, StarBurst } from '../../components/ui'
 import { Zee, ZBubble, type ZeeMood } from '../../components/Zee'
 import { playBonus, playCheck, playDailyWin, playLocked } from '../../lib/sound'
-import type { Child, Habit } from '../../lib/types'
+import type { Child, Habit, SillyActivity } from '../../lib/types'
 
 type CardState = '' | 'now' | 'done' | 'locked'
 const BLOCK_ORDER: Record<Habit['time_block'], number> = { morning: 0, afternoon: 1, evening: 2 }
+const SILLY_DONE_PREFIX = 'sqz_silly_done'
+
+function hashString(input: string): number {
+  let hash = 2166136261
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  return hash >>> 0
+}
 
 export function Board({
   child,
@@ -26,6 +36,20 @@ export function Board({
   const [pending, setPending] = useState<Set<string>>(new Set())
   const [zeeMood, setZeeMood] = useState<ZeeMood>('awake')
   const [celebration, setCelebration] = useState<null | { streakBonus: number; streak: number }>(null)
+  const sillyDoneKey = `${SILLY_DONE_PREFIX}:${child.id}:${today}`
+  const [sillyDone, setSillyDone] = useState(() => {
+    const value = localStorage.getItem(sillyDoneKey)
+    return value === '1' || value === 'starred'
+  })
+  const [sillyStarred, setSillyStarred] = useState(() => localStorage.getItem(sillyDoneKey) === 'starred')
+  const [sillyPending, setSillyPending] = useState(false)
+
+  useEffect(() => {
+    const value = localStorage.getItem(sillyDoneKey)
+    setSillyDone(value === '1' || value === 'starred')
+    setSillyStarred(value === 'starred')
+    setSillyPending(false)
+  }, [sillyDoneKey])
 
   const all = useMemo(
     () =>
@@ -39,6 +63,11 @@ export function Board({
   const coresDone = cores.length > 0 && cores.every(done)
   const allDone = all.length > 0 && all.every(done)
   const doneCount = all.filter(done).length
+  const sillyPick = useMemo(() => {
+    if (fam.sillyLibrary.length === 0) return null
+    return fam.sillyLibrary[hashString(`${child.id}:${today}`) % fam.sillyLibrary.length]
+  }, [child.id, fam.sillyLibrary, today])
+  const showSilly = Boolean(fam.parent?.silly_mode && coresDone && sillyPick)
 
   const ticket = fam.planned.find((p) => p.child_id === child.id && p.status === 'planned')
   const ticketAdv = ticket ? fam.adventures.find((a) => a.id === ticket.adventure_id) : null
@@ -99,6 +128,40 @@ export function Board({
     void fam.undoCompletion(h.id).catch(() => {})
   }
 
+  const toggleSilly = (el: HTMLElement) => {
+    if (!sillyPick || sillyPending) return
+    const note = `silly:${today}:${sillyPick.silly_key}`
+    const nextDone = !sillyDone
+    setSillyPending(true)
+    setSillyDone(nextDone)
+
+    if (nextDone) {
+      setSillyStarred(true)
+      localStorage.setItem(sillyDoneKey, 'starred')
+      playCheck()
+      StarFx.fly(el, starRef.current, () => {})
+      void fam.adjustStars(child.id, 1, note).catch(() => {
+        localStorage.removeItem(sillyDoneKey)
+        setSillyDone(false)
+        setSillyStarred(false)
+      }).finally(() => setSillyPending(false))
+      return
+    }
+
+    localStorage.removeItem(sillyDoneKey)
+    setSillyStarred(false)
+    StarFx.fly(starRef.current, el, () => {})
+    if (!sillyStarred) {
+      setSillyPending(false)
+      return
+    }
+    void fam.adjustStars(child.id, -1, `undo:${note}`).catch(() => {
+      localStorage.setItem(sillyDoneKey, 'starred')
+      setSillyDone(true)
+      setSillyStarred(true)
+    }).finally(() => setSillyPending(false))
+  }
+
   /** undo affordance only within the 5-minute window */
   const canUndo = (h: Habit): boolean => {
     const c = fam.completions.find((x) => x.habit_id === h.id && x.completed_on === today)
@@ -134,7 +197,7 @@ export function Board({
     return (
       <span>
         <b>
-          {doneCount} star{doneCount === 1 ? '' : 's'} so far!
+          {doneCount} job{doneCount === 1 ? '' : 's'} done!
         </b>{' '}
         Keep going — you’ve got this.
       </span>
@@ -170,7 +233,7 @@ export function Board({
               </span>
               <div className="hbody">
                 <div className="hname">{h.name}</div>
-                <div className="hsub">{h.is_core ? 'core set · +1 ✦' : 'bonus · +1 ✦'}</div>
+                <div className="hsub">{h.is_core ? 'core habit' : 'bonus · +1 ✦'}</div>
               </div>
               <button
                 className="hcheck"
@@ -188,6 +251,15 @@ export function Board({
           )
         })}
       </div>
+
+      {showSilly && sillyPick && (
+        <SillyCard
+          activity={sillyPick}
+          done={sillyDone}
+          pending={sillyPending}
+          onToggle={toggleSilly}
+        />
+      )}
 
       {ticketAdv && ticket && (
         <div className="board-ticket">
@@ -209,6 +281,46 @@ export function Board({
           onClose={() => setCelebration(null)}
         />
       )}
+    </div>
+  )
+}
+
+function SillyCard({
+  activity,
+  done,
+  pending,
+  onToggle,
+}: {
+  activity: SillyActivity
+  done: boolean
+  pending: boolean
+  onToggle: (el: HTMLElement) => void
+}) {
+  const details = [
+    activity.duration_min ? `${activity.duration_min} min` : '',
+    activity.materials && activity.materials !== 'none' ? activity.materials : '',
+    activity.grownup_optional ? 'grown-up optional' : '',
+  ].filter(Boolean)
+
+  return (
+    <div className={'silly-card' + (done ? ' done' : '')}>
+      <span className="silly-icon">
+        <SqzIcon name="dice" size={24} />
+      </span>
+      <div className="col grow" style={{ minWidth: 0 }}>
+        <span className="silly-kicker">Silly mode</span>
+        <span className="silly-name">{activity.name}</span>
+        <span className="silly-prompt">{activity.kid_prompt}</span>
+        {details.length > 0 && <span className="silly-sub">{details.join(' · ')}</span>}
+      </div>
+      <button
+        className="hcheck silly-check"
+        disabled={pending}
+        onClick={(e) => onToggle(e.currentTarget)}
+        aria-label={done ? `undo ${activity.name}` : `mark ${activity.name} done`}
+      >
+        {done && <SqzIcon name="check" size={18} stroke={3} />}
+      </button>
     </div>
   )
 }

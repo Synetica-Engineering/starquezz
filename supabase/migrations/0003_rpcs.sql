@@ -303,7 +303,6 @@ declare
   v_active_days int := 0;
   v_perfect boolean;
   v_awarded int := 0;
-  v_dream dreams%rowtype;
   v_dream_lit boolean := false;
   v_dream_done boolean := false;
   v_existing week_finalizations%rowtype;
@@ -349,18 +348,17 @@ begin
     values (p_child_id, 10, 'perfect_week', 'week:' || p_week_start::text);
     update children set star_balance = star_balance + 10 where id = p_child_id;
 
-    -- a perfect week lights one star in the dream constellation —
+    -- a perfect week lights one mark in every active dream constellation —
     -- spendable tokens can never buy these
-    select * into v_dream from dreams
-    where child_id = p_child_id and status = 'active'
-    for update;
-    if found then
+    with updated as (
       update dreams set stars_earned = stars_earned + 1,
         status = case when stars_earned + 1 >= stars_required then 'achieved'::dream_status else status end
-      where id = v_dream.id;
-      v_dream_lit := true;
-      v_dream_done := v_dream.stars_earned + 1 >= v_dream.stars_required;
-    end if;
+      where child_id = p_child_id and status = 'active'
+      returning status
+    )
+    select count(*) > 0, coalesce(bool_or(status = 'achieved'::dream_status), false)
+    into v_dream_lit, v_dream_done
+    from updated;
   end if;
 
   return json_build_object(

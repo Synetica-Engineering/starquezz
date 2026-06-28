@@ -375,8 +375,8 @@ describe('finalize_week (the ceremony backend)', () => {
   })
 })
 
-describe('dreams — one active slot, enforced in schema', () => {
-  it('rejects a second active dream per child', async () => {
+describe('dreams — multiple active pledges', () => {
+  it('allows more than one active dream per child', async () => {
     const fam = await createFamily()
     await fam.client.from('dreams').insert({
       child_id: fam.childId,
@@ -390,8 +390,7 @@ describe('dreams — one active slot, enforced in schema', () => {
       pledge_text: 'should fail',
       stars_required: 5,
     })
-    expect(error).not.toBeNull()
-    expect(error!.message).toMatch(/one_active_dream_per_child|duplicate/)
+    expect(error).toBeNull()
   })
 })
 

@@ -43,6 +43,7 @@ function AuthedApp() {
   // null until family data arrives; a family with no children starts in the
   // wizard and STAYS there until the handoff, even after the child row lands
   const [mode, setMode] = useState<AppMode | null>(null)
+  const [handoffChildId, setHandoffChildId] = useState<string | null>(null)
   const [online, setOnline] = useState(navigator.onLine)
 
   useEffect(() => {
@@ -78,7 +79,13 @@ function AuthedApp() {
       <DeviceStage parent>
         <StatusBar />
         {!online && <div className="offline-bar">offline — changes need a connection</div>}
-        <Wizard onDone={() => setMode('kid')} firstChild={fam.children.length === 0} />
+        <Wizard
+          onDone={(childId) => {
+            setHandoffChildId(childId ?? null)
+            setMode('kid')
+          }}
+          firstChild={fam.children.length === 0}
+        />
       </DeviceStage>
     )
   }
@@ -88,7 +95,13 @@ function AuthedApp() {
       <DeviceStage parent>
         <StatusBar />
         {!online && <div className="offline-bar">offline — changes need a connection</div>}
-        <ParentShell onExit={() => setMode('kid')} onAddChild={() => setMode('wizard')} />
+        <ParentShell
+          onExit={() => {
+            setHandoffChildId(null)
+            setMode('kid')
+          }}
+          onAddChild={() => setMode('wizard')}
+        />
       </DeviceStage>
     )
   }
@@ -97,7 +110,13 @@ function AuthedApp() {
     <DeviceStage>
       <StatusBar />
       {!online && <div className="offline-bar">offline — stars will fly again soon</div>}
-      <KidShell onParent={() => setMode('parent')} />
+      <KidShell
+        onParent={() => {
+          setHandoffChildId(null)
+          setMode('parent')
+        }}
+        handoffChildId={handoffChildId}
+      />
       <FxLayer />
     </DeviceStage>
   )

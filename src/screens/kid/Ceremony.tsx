@@ -85,7 +85,7 @@ export function Ceremony({ child, onClose }: { child: Child; onClose: () => void
 
   const menu = fam.adventures.filter((a) => !a.archived_at)
   const pickable = menu.filter((a) => a.tier === 0 || child.star_balance >= a.cost)
-  const dream = fam.dreams.find(
+  const ceremonyDreams = fam.dreams.filter(
     (d) => d.child_id === child.id && (d.status === 'active' || d.status === 'achieved'),
   )
   const starDays = result?.star_days ?? weekCells.filter((c) => c === 'on').length
@@ -148,33 +148,37 @@ export function Ceremony({ child, onClose }: { child: Child; onClose: () => void
               ) : (
                 <h2>Every day shone ✦</h2>
               )}
-              {dream && (result?.dream_star_lit || dream.status === 'achieved') && (
+              {ceremonyDreams.length > 0 && (result?.dream_star_lit || ceremonyDreams.some((d) => d.status === 'achieved')) && (
                 <>
-                  <div className="constel-wrap" style={{ width: 250, margin: 0 }}>
-                    <Constellation
-                      lit={dream.stars_earned}
-                      total={dream.stars_required}
-                      width={236}
-                      height={160}
-                      flashNew={result?.dream_star_lit ?? false}
-                    />
-                  </div>
-                  <p>
-                    {dream.status === 'achieved' || result?.dream_completed ? (
-                      <>
-                        <b style={{ color: '#86F2C8' }}>The constellation is complete.</b> {dream.name} is
-                        coming true!
-                      </>
-                    ) : (
-                      <>
-                        A new star joins your sky — {dream.stars_earned} of {dream.stars_required} toward{' '}
-                        <b style={{ color: '#FFE49C' }}>{dream.name}</b>.
-                      </>
-                    )}
-                  </p>
+                  {ceremonyDreams.map((dream) => (
+                    <div key={dream.id} style={{ marginBottom: 10 }}>
+                      <div className="constel-wrap" style={{ width: 250, margin: 0 }}>
+                        <Constellation
+                          lit={dream.stars_earned}
+                          total={dream.stars_required}
+                          width={236}
+                          height={160}
+                          flashNew={result?.dream_star_lit ?? false}
+                        />
+                      </div>
+                      <p>
+                        {dream.status === 'achieved' || result?.dream_completed ? (
+                          <>
+                            <b style={{ color: '#86F2C8' }}>The constellation is complete.</b> {dream.name} is
+                            coming true!
+                          </>
+                        ) : (
+                          <>
+                            A new mark joins your sky — {dream.stars_earned} of {dream.stars_required} toward{' '}
+                            <b style={{ color: '#FFE49C' }}>{dream.name}</b>.
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  ))}
                 </>
               )}
-              {!dream && result?.streak != null && result.streak > 0 && (
+              {ceremonyDreams.length === 0 && result?.streak != null && result.streak > 0 && (
                 <p>
                   Your flame burns <b style={{ color: '#FFC196' }}>{result.streak} days</b> strong.
                 </p>

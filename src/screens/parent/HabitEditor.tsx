@@ -265,7 +265,7 @@ export function HabitEditor() {
                   <span className="col grow" style={{ minWidth: 0 }}>
                     <span className="pr-name">{h.name}</span>
                     <span className="pr-sub">
-                      {h.is_core ? 'core set · +1 ✦' : 'bonus · +1 ✦'} · {h.category}
+                      {h.is_core ? 'core habit' : 'bonus · +1 ✦'} · {h.category}
                       {h.active_days.length < 7 && ` · ${h.active_days.map((d) => DAY_LABELS[d - 1]).join('')}`}
                     </span>
                     {masteryReady.has(h.id) && (
@@ -399,7 +399,7 @@ export function HabitEditor() {
             <div className="row between">
               <span className="col">
                 <span className="pr-name">Core habit</span>
-                <span className="pr-sub">{form.is_core ? 'counts toward the star-day · core set +1 ✦' : 'bonus — unlocks after cores · +1 ✦'}</span>
+                <span className="pr-sub">{form.is_core ? 'counts toward the star-day' : 'bonus — unlocks after cores · +1 ✦'}</span>
               </span>
               <button
                 className={'toggle' + (form.is_core ? ' on' : '')}

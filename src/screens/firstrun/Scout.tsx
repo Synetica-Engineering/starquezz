@@ -453,7 +453,7 @@ export function ScoutChat({
                   {items.map(({ d, i }) =>
                     draftCard(
                       'habit', i, d.icon, d.name,
-                      `${d.is_core ? 'core set · +1 ✦' : 'bonus · +1 ✦'} · ${d.category}`,
+                      `${d.is_core ? 'core habit' : 'bonus · +1 ✦'} · ${d.category}`,
                       d.why,
                       habitState[i],
                       (s) => setHabitState((p) => ({ ...p, [i]: s })),
