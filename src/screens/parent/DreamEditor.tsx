@@ -1,5 +1,5 @@
-// The Big Dream — one slot per kid, parent-created, rare. An empty slot is
-// healthy, not a bug. Pledge framing, never a price: fueled by perfect
+// Big Dreams are parent-created pledges, rare by design but not limited to one.
+// An empty sky is healthy, not a bug. Pledge framing, never a price: fueled by perfect
 // weeks, untouchable by spendable stars.
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
@@ -26,7 +26,7 @@ export function DreamEditor() {
 
   if (!child) return <div className="view center muted">Add a kid first ✦</div>
 
-  const active = fam.dreams.find((d) => d.child_id === child.id && d.status === 'active')
+  const activeDreams = fam.dreams.filter((d) => d.child_id === child.id && d.status === 'active')
   const galaxy = fam.dreams.filter((d) => d.child_id === child.id && d.status === 'achieved')
 
   const save = async () => {
@@ -42,7 +42,7 @@ export function DreamEditor() {
       if (error) return showToast('Could not save')
     } else {
       const { error } = await supabase.from('dreams').insert({ ...row, child_id: child.id })
-      if (error) return showToast(error.message.includes('one_active_dream') ? 'One dream at a time' : 'Could not save')
+      if (error) return showToast('Could not save')
     }
     setForm(null)
     await fam.refresh()
@@ -58,7 +58,14 @@ export function DreamEditor() {
   return (
     <div className="view scroll">
       <div className="parent-head">
-        <span className="pt grow">Big Dream</span>
+        <span className="pt grow">Big Dreams</span>
+        <button
+          className="iconbtn"
+          onClick={() => setForm({ name: '', pledge_text: '', stars_required: 10, anchor_date: '' })}
+          aria-label="add dream"
+        >
+          <SqzIcon name="plus" size={18} />
+        </button>
       </div>
 
       {fam.children.length > 1 && (
@@ -71,43 +78,46 @@ export function DreamEditor() {
         </div>
       )}
 
-      {active ? (
+      {activeDreams.length > 0 ? (
         <div className="col gap12">
-          <div className="pcard col gap10">
-            <div className="row between">
-              <span className="dname2" style={{ fontFamily: 'var(--disp)', fontWeight: 700, fontSize: 18, color: '#fff' }}>
-                {active.name}
-              </span>
-              <span className="pill" style={{ fontSize: 13 }}>
-                {active.stars_earned} / {active.stars_required} ✦
-              </span>
+          {activeDreams.map((dream) => (
+            <div className="pcard col gap10" key={dream.id}>
+              <div className="row between">
+                <span className="dname2" style={{ fontFamily: 'var(--disp)', fontWeight: 700, fontSize: 18, color: '#fff' }}>
+                  {dream.name}
+                </span>
+                <span className="pill row gap4" style={{ fontSize: 13 }}>
+                  <SqzIcon name="flame" size={13} color="#FFC196" fill="#FF9A5A" />
+                  {dream.stars_earned} / {dream.stars_required}
+                </span>
+              </div>
+              <div className="constel-wrap" style={{ margin: 0 }}>
+                <Constellation lit={dream.stars_earned} total={dream.stars_required} width={230} height={150} />
+              </div>
+              <div className="pledge">{dream.pledge_text}</div>
+              <div className="row gap8">
+                <button
+                  className="chip edit"
+                  onClick={() =>
+                    setForm({
+                      id: dream.id, name: dream.name, pledge_text: dream.pledge_text,
+                      stars_required: dream.stars_required, anchor_date: dream.anchor_date ?? '',
+                    })
+                  }
+                >
+                  edit pledge
+                </button>
+                <button className="chip skip" onClick={() => setRetiring(dream)}>
+                  retire quietly
+                </button>
+              </div>
             </div>
-            <div className="constel-wrap" style={{ margin: 0 }}>
-              <Constellation lit={active.stars_earned} total={active.stars_required} width={230} height={150} />
-            </div>
-            <div className="pledge">{active.pledge_text}</div>
-            <div className="row gap8">
-              <button
-                className="chip edit"
-                onClick={() =>
-                  setForm({
-                    id: active.id, name: active.name, pledge_text: active.pledge_text,
-                    stars_required: active.stars_required, anchor_date: active.anchor_date ?? '',
-                  })
-                }
-              >
-                edit pledge
-              </button>
-              <button className="chip skip" onClick={() => setRetiring(active)}>
-                retire quietly
-              </button>
-            </div>
-          </div>
+          ))}
           <div className="nudge-card">
             <SqzIcon name="bulb" size={17} />
             <span>
-              Each <b>perfect week</b> lights one star — spendable stars can’t buy them, so the adventure
-              economy stays untouched. A bad week simply doesn’t light a star. Nothing else.
+              Each <b>perfect week</b> adds one flame-lit mark to every active dream. Spendable stars can’t
+              buy them, so the adventure economy stays untouched. A bad week simply doesn’t add one.
             </span>
           </div>
         </div>
@@ -119,7 +129,7 @@ export function DreamEditor() {
               No dream in the sky right now
             </span>
             <p className="muted" style={{ fontSize: 13.5, margin: 0, lineHeight: 1.55, maxWidth: 250 }}>
-              An empty slot is healthy. When {child.name} aims at something big — a telescope, a console, a
+              An empty sky is healthy. When {child.name} aims at something big — a telescope, a console, a
               bike — anchor it to an event and a number of perfect weeks, as a pledge.
             </p>
             <button
@@ -132,8 +142,8 @@ export function DreamEditor() {
           <div className="nudge-card">
             <SqzIcon name="bulb" size={17} />
             <span>
-              One dream at a time, parent-initiated, with real gaps between dreams — if the slot refills
-              constantly it becomes a wage system with extra steps.
+              Dreams should stay parent-initiated and rare. It’s okay to have more than one, but real gaps
+              keep them from turning into a wage system with extra steps.
             </span>
           </div>
         </div>

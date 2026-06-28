@@ -37,6 +37,12 @@ export function Settings({ onAddChild }: { onAddChild: () => void }) {
     await fam.refresh()
   }
 
+  const toggleSillyMode = async () => {
+    if (!fam.parent) return
+    await supabase.from('parents').update({ silly_mode: !fam.parent.silly_mode }).eq('id', fam.parent.id)
+    await fam.refresh()
+  }
+
   const saveCode = async (v: string) => {
     setCode(v)
     if (v.length === 4 && codeFor) {
@@ -168,6 +174,20 @@ export function Settings({ onAddChild }: { onAddChild: () => void }) {
                 setMutedState(!muted)
               }}
               aria-label="toggle sounds"
+            />
+          </div>
+          <div className="plist-row">
+            <span className="pr-icon">
+              <SqzIcon name="dice" size={19} />
+            </span>
+            <span className="col grow">
+              <span className="pr-name">Silly mode</span>
+              <span className="pr-sub">one optional tiny joy prompt after core habits are done</span>
+            </span>
+            <button
+              className={'toggle' + (fam.parent?.silly_mode ? ' on' : '')}
+              onClick={() => void toggleSillyMode()}
+              aria-label="toggle silly mode"
             />
           </div>
         </div>

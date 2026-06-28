@@ -27,7 +27,7 @@ starquezz/
 │  │  ├─ 0003_rpcs.sql           # star economy RPCs + streak fns + PIN fns
 │  │  └─ 0004_libraries.sql      # global habit_library + library_activities content
 │  ├─ seed.sql                   # (dev only) nothing destructive
-│  └─ functions/scout/index.ts   # Claude proxy w/ structured output + rate limit
+│  └─ functions/scout/index.ts   # DeepSeek V4 Flash proxy w/ structured output + rate limit
 ├─ tests/
 │  ├─ integration/economy.test.ts    # RPCs vs local supabase (service role)
 │  ├─ integration/rls.test.ts        # family isolation proofs
@@ -60,7 +60,7 @@ Tables per AGENT_BRIEF §7 sketch + §4c/4d additions, with: `parents.id = auth.
 
 | RPC | Behavior |
 |---|---|
-| `complete_habit(p_habit_id, p_on date)` | verify ownership+active+scheduled day; insert completion; +1 core / +2 bonus star_event (bonus only if all cores done — else error `cores_incomplete`); update cached balance; if this completes all cores → star-day; if streak hits exactly 3 → +3 streak_3 event; returns json `{awarded, star_day, streak, all_done}` |
+| `complete_habit(p_habit_id, p_on date)` | verify ownership+active+scheduled day; insert completion; +1 core-set star_event only when all scheduled cores are done / +1 bonus star_event per bonus habit (bonus only if all cores done — else error `cores_incomplete`); update cached balance; if this completes all cores → star-day; if streak hits exactly 3 → +3 streak_3 event; returns json `{awarded, star_day, streak, all_done}` |
 | `undo_completion(p_habit_id, p_on date)` | only within 5 min of completion `created_at`; deletes completion + compensating `undo` star_events (also reverses streak_3 if it falls) |
 | `redeem_adventure(p_adventure_id, p_child_id, p_planned_for date)` | balance check inside txn; `redemption` event (negative); insert planned_adventures |
 | `finalize_week(p_child_id, p_week_start date)` | idempotent; computes perfect week (star-day on every active day); +10 `perfect_week`; lights one dream star on active dream (and marks dream achieved when full); returns recap json |
@@ -101,7 +101,7 @@ Star-day = every active core habit scheduled that ISO-dow has a completion. Perf
 - [x] Settings: kid secret-code toggle (only visible with 2+ children), ceremony reminder pref, sound mute
 
 ### Phase 5 — Scout
-- [x] Edge Function `scout`: Claude structured-output proxy, schema-validated draft habits/adventures, rate limit; never computes stars
+- [x] Edge Function `scout`: DeepSeek V4 Flash structured-output proxy, schema-validated draft habits/adventures, rate limit; never computes stars
 - [x] Wizard chat UI with draft cards (accept/edit/skip); deterministic seed fallback path ("skip — I'll do it myself") so the app fully works with no LLM key
 - [x] Re-run triggers from parent side (new child, graduation slot, menu refresh)
 

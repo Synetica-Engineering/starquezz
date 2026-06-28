@@ -1,40 +1,73 @@
 // The Routine Board — answers "what now?", not "what today?".
-// Defaults to the current time block; check-offs are trusted, instant, and
-// reversible for 5 minutes. The check-off must feel better than being told.
-import { useMemo, useRef, useState } from 'react'
+// Shows today's routine in one ordered list; check-offs are trusted, instant,
+// and reversible for 5 minutes. The check-off must feel better than being told.
+import { useEffect, useMemo, useState } from 'react'
 import { useFamily, habitsForChild, isDone, scheduledOn } from '../../state/family'
-import { BLOCKS, BLOCK_ICON, BLOCK_LABEL, currentBlock, formatDay, isoDow, todayLocal } from '../../lib/dates'
+import { formatDay, isoDow, todayLocal } from '../../lib/dates'
 import { SqzIcon } from '../../components/icons'
+import { HabitIcon } from '../../components/HabitIcon'
 import { StarFx, StarBurst } from '../../components/ui'
 import { Zee, ZBubble, type ZeeMood } from '../../components/Zee'
 import { playBonus, playCheck, playDailyWin, playLocked } from '../../lib/sound'
-import type { Child, Habit } from '../../lib/types'
+import type { Child, Habit, SillyActivity } from '../../lib/types'
 
 type CardState = '' | 'now' | 'done' | 'locked'
+const BLOCK_ORDER: Record<Habit['time_block'], number> = { morning: 0, afternoon: 1, evening: 2 }
+const SILLY_DONE_PREFIX = 'sqz_silly_done'
+
+function hashString(input: string): number {
+  let hash = 2166136261
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  return hash >>> 0
+}
 
 export function Board({
   child,
   starRef,
 }: {
   child: Child
-  starRef: React.RefObject<HTMLSpanElement | null>
+  starRef: React.RefObject<HTMLElement | null>
 }) {
   const fam = useFamily()
   const today = todayLocal()
-  const [blockIdx, setBlockIdx] = useState(() => BLOCKS.indexOf(currentBlock()))
   const [pending, setPending] = useState<Set<string>>(new Set())
   const [zeeMood, setZeeMood] = useState<ZeeMood>('awake')
   const [celebration, setCelebration] = useState<null | { streakBonus: number; streak: number }>(null)
-  const touchX = useRef<number | null>(null)
+  const sillyDoneKey = `${SILLY_DONE_PREFIX}:${child.id}:${today}`
+  const [sillyDone, setSillyDone] = useState(() => {
+    const value = localStorage.getItem(sillyDoneKey)
+    return value === '1' || value === 'starred'
+  })
+  const [sillyStarred, setSillyStarred] = useState(() => localStorage.getItem(sillyDoneKey) === 'starred')
+  const [sillyPending, setSillyPending] = useState(false)
 
-  const block = BLOCKS[blockIdx]
-  const all = useMemo(() => scheduledOn(habitsForChild(fam.habits, child.id), today), [fam.habits, child.id, today])
-  const blockHabits = all.filter((h) => h.time_block === block)
+  useEffect(() => {
+    const value = localStorage.getItem(sillyDoneKey)
+    setSillyDone(value === '1' || value === 'starred')
+    setSillyStarred(value === 'starred')
+    setSillyPending(false)
+  }, [sillyDoneKey])
+
+  const all = useMemo(
+    () =>
+      [...scheduledOn(habitsForChild(fam.habits, child.id), today)].sort(
+        (a, b) => BLOCK_ORDER[a.time_block] - BLOCK_ORDER[b.time_block] || a.sort_order - b.sort_order,
+      ),
+    [fam.habits, child.id, today],
+  )
   const cores = all.filter((h) => h.is_core)
   const done = (h: Habit) => pending.has(h.id) || isDone(fam.completions, h.id, today)
   const coresDone = cores.length > 0 && cores.every(done)
   const allDone = all.length > 0 && all.every(done)
   const doneCount = all.filter(done).length
+  const sillyPick = useMemo(() => {
+    if (fam.sillyLibrary.length === 0) return null
+    return fam.sillyLibrary[hashString(`${child.id}:${today}`) % fam.sillyLibrary.length]
+  }, [child.id, fam.sillyLibrary, today])
+  const showSilly = Boolean(fam.parent?.silly_mode && coresDone && sillyPick)
 
   const ticket = fam.planned.find((p) => p.child_id === child.id && p.status === 'planned')
   const ticketAdv = ticket ? fam.adventures.find((a) => a.id === ticket.adventure_id) : null
@@ -95,6 +128,40 @@ export function Board({
     void fam.undoCompletion(h.id).catch(() => {})
   }
 
+  const toggleSilly = (el: HTMLElement) => {
+    if (!sillyPick || sillyPending) return
+    const note = `silly:${today}:${sillyPick.silly_key}`
+    const nextDone = !sillyDone
+    setSillyPending(true)
+    setSillyDone(nextDone)
+
+    if (nextDone) {
+      setSillyStarred(true)
+      localStorage.setItem(sillyDoneKey, 'starred')
+      playCheck()
+      StarFx.fly(el, starRef.current, () => {})
+      void fam.adjustStars(child.id, 1, note).catch(() => {
+        localStorage.removeItem(sillyDoneKey)
+        setSillyDone(false)
+        setSillyStarred(false)
+      }).finally(() => setSillyPending(false))
+      return
+    }
+
+    localStorage.removeItem(sillyDoneKey)
+    setSillyStarred(false)
+    StarFx.fly(starRef.current, el, () => {})
+    if (!sillyStarred) {
+      setSillyPending(false)
+      return
+    }
+    void fam.adjustStars(child.id, -1, `undo:${note}`).catch(() => {
+      localStorage.setItem(sillyDoneKey, 'starred')
+      setSillyDone(true)
+      setSillyStarred(true)
+    }).finally(() => setSillyPending(false))
+  }
+
   /** undo affordance only within the 5-minute window */
   const canUndo = (h: Habit): boolean => {
     const c = fam.completions.find((x) => x.habit_id === h.id && x.completed_on === today)
@@ -130,7 +197,7 @@ export function Board({
     return (
       <span>
         <b>
-          {doneCount} star{doneCount === 1 ? '' : 's'} so far!
+          {doneCount} job{doneCount === 1 ? '' : 's'} done!
         </b>{' '}
         Keep going — you’ve got this.
       </span>
@@ -138,48 +205,21 @@ export function Board({
   }
 
   return (
-    <div
-      className="view scroll"
-      onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
-      onTouchEnd={(e) => {
-        if (touchX.current == null) return
-        const dx = e.changedTouches[0].clientX - touchX.current
-        touchX.current = null
-        if (dx < -48 && blockIdx < BLOCKS.length - 1) setBlockIdx(blockIdx + 1)
-        if (dx > 48 && blockIdx > 0) setBlockIdx(blockIdx - 1)
-      }}
-    >
-      <div className="blockbar">
-        <span className="bname">
-          <SqzIcon name={BLOCK_ICON[block]} size={19} color="#9FECFF" /> {BLOCK_LABEL[block]}
-        </span>
-        <span className="nav">
-          <button onClick={() => setBlockIdx(blockIdx - 1)} disabled={blockIdx === 0} aria-label="earlier block">
-            ‹
-          </button>
-          <button
-            onClick={() => setBlockIdx(blockIdx + 1)}
-            disabled={blockIdx === BLOCKS.length - 1}
-            aria-label="later block"
-          >
-            ›
-          </button>
-        </span>
-      </div>
-
+    <div className="view scroll">
       <div className="row gap10" style={{ marginBottom: 14 }}>
         <Zee size={42} mood={zeeMood} />
         <ZBubble>{zeeLine()}</ZBubble>
       </div>
 
       <div className="habits">
-        {blockHabits.length === 0 && (
+        {all.length === 0 && (
           <div className="pcard tac muted" style={{ fontSize: 14, padding: 22 }}>
-            Nothing for {BLOCK_LABEL[block].toLowerCase()} — check another block ✦
+            Nothing on the board today ✦
           </div>
         )}
-        {blockHabits.map((h) => {
+        {all.map((h) => {
           const state = withSpotlight(cardState(h))
+          const undoable = state === 'done' && canUndo(h)
           const interactive = state === 'now' || state === ''
           return (
             <div className={'habit ' + state + (!h.is_core && state === 'locked' && coresDone ? ' unlockable' : '')} key={h.id}>
@@ -189,20 +229,20 @@ export function Board({
                 </span>
               )}
               <span className="hicon">
-                <SqzIcon name={h.icon} size={25} />
+                <HabitIcon icon={h.icon} size={25} />
               </span>
               <div className="hbody">
                 <div className="hname">{h.name}</div>
-                <div className="hsub">{h.is_core ? '+1 ✦' : 'bonus · +2 ✦'}</div>
+                <div className="hsub">{h.is_core ? 'core habit' : 'bonus · +1 ✦'}</div>
               </div>
               <button
                 className="hcheck"
-                aria-label={state === 'done' ? `${h.name} done` : `mark ${h.name} done`}
-                onClick={interactive ? (e) => check(h, e.currentTarget) : undefined}
+                aria-label={state === 'done' ? (undoable ? `undo ${h.name}` : `${h.name} done`) : `mark ${h.name} done`}
+                onClick={undoable ? () => undo(h) : interactive ? (e) => check(h, e.currentTarget) : undefined}
               >
                 {state === 'done' && <SqzIcon name="check" size={19} stroke={3} />}
               </button>
-              {state === 'done' && canUndo(h) && (
+              {undoable && (
                 <button className="undo-chip" onClick={() => undo(h)}>
                   oops, undo
                 </button>
@@ -211,6 +251,15 @@ export function Board({
           )
         })}
       </div>
+
+      {showSilly && sillyPick && (
+        <SillyCard
+          activity={sillyPick}
+          done={sillyDone}
+          pending={sillyPending}
+          onToggle={toggleSilly}
+        />
+      )}
 
       {ticketAdv && ticket && (
         <div className="board-ticket">
@@ -232,6 +281,46 @@ export function Board({
           onClose={() => setCelebration(null)}
         />
       )}
+    </div>
+  )
+}
+
+function SillyCard({
+  activity,
+  done,
+  pending,
+  onToggle,
+}: {
+  activity: SillyActivity
+  done: boolean
+  pending: boolean
+  onToggle: (el: HTMLElement) => void
+}) {
+  const details = [
+    activity.duration_min ? `${activity.duration_min} min` : '',
+    activity.materials && activity.materials !== 'none' ? activity.materials : '',
+    activity.grownup_optional ? 'grown-up optional' : '',
+  ].filter(Boolean)
+
+  return (
+    <div className={'silly-card' + (done ? ' done' : '')}>
+      <span className="silly-icon">
+        <SqzIcon name="dice" size={24} />
+      </span>
+      <div className="col grow" style={{ minWidth: 0 }}>
+        <span className="silly-kicker">Silly mode</span>
+        <span className="silly-name">{activity.name}</span>
+        <span className="silly-prompt">{activity.kid_prompt}</span>
+        {details.length > 0 && <span className="silly-sub">{details.join(' · ')}</span>}
+      </div>
+      <button
+        className="hcheck silly-check"
+        disabled={pending}
+        onClick={(e) => onToggle(e.currentTarget)}
+        aria-label={done ? `undo ${activity.name}` : `mark ${activity.name} done`}
+      >
+        {done && <SqzIcon name="check" size={18} stroke={3} />}
+      </button>
     </div>
   )
 }

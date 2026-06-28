@@ -29,10 +29,32 @@ interface AdvForm {
 export function AdventureEditor() {
   const fam = useFamily()
   const [form, setForm] = useState<AdvForm | null>(null)
+  const [ideaOpen, setIdeaOpen] = useState(false)
   const [library, setLibrary] = useState(false)
+  const [idea, setIdea] = useState('')
+  const [tidying, setTidying] = useState(false)
   const [toast, showToast] = useToast()
 
   const menu = fam.adventures.filter((a) => !a.archived_at)
+  const firstChild = fam.children[0]
+  const profile = {
+    age: firstChild?.birth_year ? new Date().getFullYear() - firstChild.birth_year : undefined,
+    interests: firstChild?.interests?.join(', '),
+    name: firstChild?.name,
+  }
+
+  const newAdventure = () => {
+    setIdea('')
+    setForm(null)
+    setIdeaOpen(true)
+  }
+
+  const closeForm = () => {
+    setForm(null)
+    setIdeaOpen(false)
+    setIdea('')
+    setTidying(false)
+  }
 
   const save = async () => {
     if (!form || !fam.parent) return
@@ -52,20 +74,88 @@ export function AdventureEditor() {
         .insert({ ...row, parent_id: fam.parent.id, library_id: form.library_id ?? null })
       if (error) return showToast('Could not save')
     }
-    setForm(null)
+    closeForm()
     await fam.refresh()
   }
 
   const archive = async (a: Adventure) => {
     const { error } = await supabase.from('adventures').update({ archived_at: new Date().toISOString() }).eq('id', a.id)
     if (error) return showToast('Could not archive')
-    setForm(null)
+    closeForm()
     await fam.refresh()
     showToast(`"${a.name}" off the menu`)
   }
 
-  const addFromLibrary = async (entry: LibraryActivity) => {
+  const fallbackDraft = (raw: string): AdvForm => {
+    const text = raw.trim()
+    const lower = text.toLowerCase()
+    const illustration = lower.match(/pancake|cook|bake|kitchen/) ? 'pancake'
+      : lower.match(/book|library|read/) ? 'library'
+      : lower.match(/bike|cycle/) ? 'bike'
+      : lower.match(/swim|pool/) ? 'swim'
+      : lower.match(/park|playground|swing/) ? 'swing'
+      : lower.match(/movie|film|popcorn/) ? 'popcorn'
+      : lower.match(/camp|fire/) ? 'campfire'
+      : lower.match(/paint|draw|art/) ? 'easel'
+      : 'tent'
+    const tier = lower.match(/free|home|house|inside|backyard/) ? 0 : lower.match(/trip|museum|train|zoo|special/) ? 2 : 1
+    return {
+      name: text
+        .split(/\s+/)
+        .slice(0, 6)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ')
+        .slice(0, 48) || 'Family Adventure',
+      illustration,
+      tier,
+      cost: TIER_COST[tier],
+      venue_note: '',
+    }
+  }
+
+  const tidyIdea = async () => {
+    const raw = idea.trim()
+    if (!raw || tidying) return
+    setTidying(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('scout', {
+        body: { kind: 'custom_adventure', profile, idea: raw },
+      })
+      if (error || !data?.adventure) throw new Error(error?.message ?? 'no draft')
+      const draft = data.adventure as Partial<AdvForm>
+      const tier = [0, 1, 2, 3].includes(Number(draft.tier)) ? Number(draft.tier) : 1
+      const illustration = typeof draft.illustration === 'string' && ADVENTURE_ICONS.includes(draft.illustration)
+        ? draft.illustration
+        : 'tent'
+      setIdeaOpen(false)
+      setForm({
+        name: String(draft.name ?? '').slice(0, 48) || raw.slice(0, 48),
+        illustration,
+        tier,
+        cost: TIER_COST[tier],
+        venue_note: String(draft.venue_note ?? '').slice(0, 60),
+      })
+    } catch {
+      setIdeaOpen(false)
+      setForm(fallbackDraft(raw))
+      showToast('Starquezz is offline — made a simple draft')
+    } finally {
+      setTidying(false)
+    }
+  }
+
+  const toggleLibrary = async (entry: LibraryActivity, existing: Adventure | null) => {
     if (!fam.parent) return
+    if (existing) {
+      const { error } = await supabase
+        .from('adventures')
+        .update({ archived_at: new Date().toISOString() })
+        .eq('id', existing.id)
+      if (error) return showToast('Could not remove')
+      await fam.refresh()
+      showToast(`"${entry.name}" off the menu`)
+      return
+    }
     const { error } = await supabase.from('adventures').insert({
       parent_id: fam.parent.id,
       library_id: entry.id,
@@ -89,7 +179,7 @@ export function AdventureEditor() {
         </button>
         <button
           className="iconbtn"
-          onClick={() => setForm({ name: '', illustration: 'tent', cost: 20, tier: 1, venue_note: '' })}
+          onClick={newAdventure}
           aria-label="add adventure"
         >
           <SqzIcon name="plus" size={18} />
@@ -139,8 +229,33 @@ export function AdventureEditor() {
         )}
       </div>
 
+      {ideaOpen && (
+        <Sheet onClose={closeForm}>
+          <h3>New adventure</h3>
+          <div className="col gap12">
+            <div>
+              <label className="field-label" htmlFor="aidea">
+                Rough idea
+              </label>
+              <textarea
+                id="aidea"
+                className="input"
+                value={idea}
+                maxLength={240}
+                onChange={(e) => setIdea(e.target.value)}
+                placeholder="Swimming after school, pancake morning, library visit..."
+                style={{ minHeight: 112, resize: 'vertical' }}
+              />
+            </div>
+            <button className="btn full" disabled={!idea.trim() || tidying} onClick={() => void tidyIdea()}>
+              {tidying ? 'Starquezz is tidying...' : 'Create adventure'}
+            </button>
+          </div>
+        </Sheet>
+      )}
+
       {form && (
-        <Sheet onClose={() => setForm(null)}>
+        <Sheet onClose={closeForm}>
           <h3>{form.id ? 'Edit adventure' : 'New adventure'}</h3>
           <div className="col gap12">
             <div>
@@ -230,22 +345,26 @@ export function AdventureEditor() {
         </Sheet>
       )}
 
-      {library && <AdventureLibrarySheet onAdd={addFromLibrary} onClose={() => setLibrary(false)} />}
+      {library && <AdventureLibrarySheet onToggle={toggleLibrary} onClose={() => setLibrary(false)} />}
       <Toast message={toast} />
     </div>
   )
 }
 
 function AdventureLibrarySheet({
-  onAdd,
+  onToggle,
   onClose,
 }: {
-  onAdd: (e: LibraryActivity) => Promise<void>
+  onToggle: (e: LibraryActivity, existing: Adventure | null) => Promise<void>
   onClose: () => void
 }) {
   const fam = useFamily()
   const [energy, setEnergy] = useState<'all' | 'indoor' | 'outdoor'>('all')
   const [freeOnly, setFreeOnly] = useState(false)
+  const [pendingId, setPendingId] = useState<string | null>(null)
+  const activeByLibrary = new Map(
+    fam.adventures.filter((a) => !a.archived_at && a.library_id).map((a) => [a.library_id!, a]),
+  )
   const list = fam.activityLibrary.filter(
     (a) =>
       (energy === 'all' || a.energy === energy || a.energy === 'either') && (!freeOnly || a.cost === 'free'),
@@ -268,32 +387,44 @@ function AdventureLibrarySheet({
         </button>
       </div>
       <div className="col gap10">
-        {list.map((a) => (
-          <div className="lib-card" key={a.id}>
-            <div className="lc-head">
-              <span className="lc-ic">
-                <SqzIcon name={a.illustration} size={21} />
-              </span>
-              <span className="col grow">
-                <span className="lc-name">{a.name}</span>
-                <span className="lc-tags">
-                  {a.duration_min} min · {a.energy} · {a.cost} · {a.location_type} · ages {a.age_min}–{a.age_max}
+        {list.map((a) => {
+          const existing = activeByLibrary.get(a.id) ?? null
+          const selected = Boolean(existing)
+          const pending = pendingId === a.id
+          return (
+            <div className={'lib-card' + (selected ? ' on' : '')} key={a.id}>
+              <div className="lc-head">
+                <span className="lc-ic">
+                  <SqzIcon name={a.illustration} size={21} />
                 </span>
-              </span>
-              <button className="chip accept" onClick={() => void onAdd(a)}>
-                add
-              </button>
-            </div>
-            <div className="lc-why">{a.explainer}</div>
-            {a.prep && (
-              <div className="lc-why" style={{ paddingTop: 0, color: 'var(--faint)' }}>
-                Prep: {a.prep} · suggested:{' '}
-                {a.suggested_tier === 0 ? 'free pick' : `tier ${a.suggested_tier}`}{' '}
-                <StarToken size={10} />
+                <span className="col grow">
+                  <span className="lc-name">{a.name}</span>
+                  <span className="lc-tags">
+                    {a.duration_min} min · {a.energy} · {a.cost} · {a.location_type} · ages {a.age_min}–{a.age_max}
+                  </span>
+                </span>
+                <button
+                  className={'toggle' + (selected ? ' on' : '')}
+                  disabled={pending}
+                  aria-label={`${selected ? 'remove' : 'add'} ${a.name}`}
+                  aria-pressed={selected}
+                  onClick={() => {
+                    setPendingId(a.id)
+                    void onToggle(a, existing).finally(() => setPendingId(null))
+                  }}
+                />
               </div>
-            )}
-          </div>
-        ))}
+              <div className="lc-why">{a.explainer}</div>
+              {a.prep && (
+                <div className="lc-why" style={{ paddingTop: 0, color: 'var(--faint)' }}>
+                  Prep: {a.prep} · suggested:{' '}
+                  {a.suggested_tier === 0 ? 'free pick' : `tier ${a.suggested_tier}`}{' '}
+                  <StarToken size={10} />
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </Sheet>
   )

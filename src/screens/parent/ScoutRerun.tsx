@@ -1,4 +1,4 @@
-// Scout re-run — parent-initiated only: new school year, a birthday, a
+// Starquezz re-run — parent-initiated only: new school year, a birthday, a
 // graduated habit opening a slot, or "the menu feels stale".
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
@@ -24,7 +24,7 @@ export function ScoutRerun() {
           Everything you accepted is live — tweak details any time in the editors.
         </p>
         <button className="btn" onClick={() => setDone(false)}>
-          Back to the Scout
+          Back to Starquezz
         </button>
       </div>
     )
@@ -35,7 +35,7 @@ export function ScoutRerun() {
       <div className="view scroll">
         <div className="parent-head">
           <Zee size={36} mood="awake" />
-          <span className="pt grow">Scout</span>
+          <span className="pt grow">Starquezz</span>
         </div>
         <p className="muted" style={{ fontSize: 14, lineHeight: 1.55, margin: '0 0 14px' }}>
           Re-run the conversation when something shifts — a new school year, a birthday, a graduated habit

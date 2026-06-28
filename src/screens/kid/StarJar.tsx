@@ -4,6 +4,7 @@
 import { useFamily, graduatedHabits, starDayComplete, displayStreak } from '../../state/family'
 import { mondayOf, todayLocal, weekDates, isoDow, formatDay } from '../../lib/dates'
 import { Constellation, SqzIcon, StarToken } from '../../components/icons'
+import { HabitIcon } from '../../components/HabitIcon'
 import { WeekStrip } from '../../components/ui'
 import { scheduledOn, habitsForChild } from '../../state/family'
 import type { Child } from '../../lib/types'
@@ -20,7 +21,7 @@ export function StarJar({ child, onCeremony }: { child: Child; onCeremony: () =>
     return starDayComplete(fam.habits, fam.completions, child.id, d) ? ('on' as const) : ('off' as const)
   })
 
-  const dream = fam.dreams.find((d) => d.child_id === child.id && d.status === 'active')
+  const activeDreams = fam.dreams.filter((d) => d.child_id === child.id && d.status === 'active')
   const galaxy = fam.dreams.filter((d) => d.child_id === child.id && d.status === 'achieved')
   const hall = graduatedHabits(fam.habits, child.id)
   const isSunday = isoDow(today) === 7
@@ -57,35 +58,39 @@ export function StarJar({ child, onCeremony }: { child: Child; onCeremony: () =>
         )}
       </div>
 
-      {dream && (
+      {activeDreams.length > 0 && (
         <>
           <div className="eyebrow" style={{ marginBottom: 6 }}>
-            Big Dream
+            Big Dreams
           </div>
-          <div className="constel-wrap">
-            <Constellation lit={dream.stars_earned} total={dream.stars_required} width={250} height={172} />
-          </div>
-          <div className="progress-line" style={{ marginBottom: 10 }}>
-            <span className="num">{dream.stars_earned}</span>
-            <div className="progress-track">
-              <div
-                className="progress-fill"
-                style={{ width: `${(dream.stars_earned / dream.stars_required) * 100}%` }}
-              ></div>
+          {activeDreams.map((dream) => (
+            <div key={dream.id} style={{ marginBottom: 14 }}>
+              <div className="constel-wrap">
+                <Constellation lit={dream.stars_earned} total={dream.stars_required} width={250} height={172} />
+              </div>
+              <div className="progress-line" style={{ marginBottom: 10 }}>
+                <span className="num">{dream.stars_earned}</span>
+                <div className="progress-track">
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${(dream.stars_earned / dream.stars_required) * 100}%` }}
+                  ></div>
+                </div>
+                <span className="of">
+                  of {dream.stars_required} perfect weeks → {dream.name}
+                </span>
+              </div>
+              <div className="pledge">
+                {dream.pledge_text}
+                {dream.anchor_date && (
+                  <>
+                    {' '}
+                    <span className="date">{formatDay(dream.anchor_date)}</span>
+                  </>
+                )}
+              </div>
             </div>
-            <span className="of">
-              of {dream.stars_required} perfect weeks → {dream.name}
-            </span>
-          </div>
-          <div className="pledge" style={{ marginBottom: 14 }}>
-            {dream.pledge_text}
-            {dream.anchor_date && (
-              <>
-                {' '}
-                <span className="date">{formatDay(dream.anchor_date)}</span>
-              </>
-            )}
-          </div>
+          ))}
         </>
       )}
 
@@ -109,7 +114,7 @@ export function StarJar({ child, onCeremony }: { child: Child; onCeremony: () =>
             {hall.map((h) => (
               <div className="trophy" key={h.id}>
                 <span className="ticon">
-                  <SqzIcon name={h.icon} size={26} />
+                  <HabitIcon icon={h.icon} size={26} />
                 </span>
                 <span className="tname">{h.name}</span>
               </div>

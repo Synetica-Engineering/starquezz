@@ -136,7 +136,7 @@ create table planned_adventures (
 );
 create index planned_adv_child_idx on planned_adventures (child_id, status);
 
--- ---------- Big Dream (max ONE active per child) ----------
+-- ---------- Big Dreams ----------
 create table dreams (
   id uuid primary key default gen_random_uuid(),
   child_id uuid not null references children (id) on delete cascade,
@@ -149,7 +149,6 @@ create table dreams (
   status dream_status not null default 'active',
   created_at timestamptz not null default now()
 );
-create unique index one_active_dream_per_child on dreams (child_id) where status = 'active';
 
 -- ---------- ceremony bookkeeping (idempotent finalize_week) ----------
 create table week_finalizations (

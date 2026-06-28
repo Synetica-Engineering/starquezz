@@ -75,8 +75,8 @@ A **three-layer economy** (validated in the wireframe prototype). Each layer has
 
 | Rule | Value | Rationale |
 |---|---|---|
-| Each core habit completed | **+1 ✦, instantly** | The star-flight moment — per-check-off gratification is signature moment #1; don't starve it |
-| Each bonus habit (unlocked only after all cores) | **+2 ✦** | Extras pay more but only count when the foundation is done — no cherry-picking |
+| Scheduled core habit set completed | **+1 ✦** | The star-day moment rewards finishing the foundation before collecting extras |
+| Each bonus habit (unlocked only after all cores) | **+1 ✦** | Extras ramp up the jar only after the foundation is done — no cherry-picking |
 | 3 consecutive star-days | **+3 ✦** | Early momentum hook |
 | Perfect week | **+10 ✦** and lights a constellation star | The big weekly payoff, revealed at the ceremony |
 | Missed day | Streak resets to 0 | Tokens already earned are **never deducted** |
@@ -269,7 +269,7 @@ Do not build any of these, even as stubs:
 | Data/auth | Supabase: Auth, Postgres + RLS, RPCs | See lessons in §8 — RLS and atomicity are where v1 got burned |
 | Hosting | Vercel, auto-deploy on push to `main` | |
 | Form factor | PWA (installable, offline-tolerant for the kid view) | The board is checked daily on a shared tablet/phone |
-| LLM (Scout only) | Claude API via a Supabase Edge Function (key server-side), structured output / tool use | Cheap fast model (Haiku-class) is enough; calls are rare (setup + occasional refresh), cost ≈ zero. The kid loop makes no LLM calls |
+| LLM (Scout only) | DeepSeek V4 Flash via a Supabase Edge Function (key server-side), structured output / tool use | Cheap fast model is enough; calls are rare (setup + occasional refresh), cost ≈ zero. The kid loop makes no LLM calls |
 | Testing | Vitest + Testing Library | Star economy and streak logic must be unit-tested — they're the trust contract with the kid |
 
 ### Data model sketch

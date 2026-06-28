@@ -17,18 +17,23 @@ type KidScreen = 'splash' | 'select' | 'code' | 'board' | 'jar' | 'adventures'
 const ACTIVE_KEY = 'sqz_active_child'
 const SEEN_SPLASH = 'sqz_splash_seen' // session-scoped: cold start vs resume
 
-export function KidShell({ onParent }: { onParent: () => void }) {
+export function KidShell({ onParent, handoffChildId }: { onParent: () => void; handoffChildId?: string | null }) {
   const fam = useFamily()
   const [screen, setScreen] = useState<KidScreen>('splash')
-  const [activeId, setActiveId] = useState<string | null>(() => localStorage.getItem(ACTIVE_KEY))
+  const [activeId, setActiveId] = useState<string | null>(() => handoffChildId ?? localStorage.getItem(ACTIVE_KEY))
   const [waving, setWaving] = useState<string | null>(null)
   const [codeShake, setCodeShake] = useState(false)
   const [code, setCode] = useState('')
   const [pendingChild, setPendingChild] = useState<Child | null>(null)
   const [ceremony, setCeremony] = useState(false)
-  const starRef = useRef<HTMLSpanElement>(null)
+  const starRef = useRef<HTMLButtonElement>(null)
 
   const active = fam.children.find((c) => c.id === activeId) ?? null
+  const awaitingHandoffChild = Boolean(handoffChildId && activeId === handoffChildId && !active)
+
+  useEffect(() => {
+    if (handoffChildId) setActiveId(handoffChildId)
+  }, [handoffChildId])
 
   useEffect(() => {
     if (activeId) localStorage.setItem(ACTIVE_KEY, activeId)
@@ -132,10 +137,12 @@ export function KidShell({ onParent }: { onParent: () => void }) {
     )
   }
 
-  if (!active) {
+  if (!active && !awaitingHandoffChild) {
     setScreen('select')
     return null
   }
+
+  if (!active) return <Splash resume />
 
   const navIcon = (id: KidScreen, label: string, icon: React.ReactNode) => (
     <button className={'navitem' + (screen === id ? ' active' : '')} onClick={() => setScreen(id)} aria-label={label}>
@@ -147,7 +154,7 @@ export function KidShell({ onParent }: { onParent: () => void }) {
   return (
     <>
       <div style={{ padding: '0 20px' }}>
-        <TopBar child={active} starRef={starRef} onAvatar={() => setScreen('select')} />
+        <TopBar child={active} starRef={starRef} onAvatar={() => setScreen('select')} onStars={() => setScreen('jar')} />
       </div>
       <div key={screen} style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {screen === 'board' && <Board child={active} starRef={starRef} />}
@@ -156,8 +163,7 @@ export function KidShell({ onParent }: { onParent: () => void }) {
       </div>
       <div className="bottomnav">
         {navIcon('board', 'Today', <SqzIcon name="sun" size={22} />)}
-        {navIcon('jar', 'Stars', <StarToken size={22} color="currentColor" />)}
-        {navIcon('adventures', 'Adventures', <SqzIcon name="tent" size={22} />)}
+        {navIcon('adventures', 'Redeem Adventures', <SqzIcon name="tent" size={22} />)}
       </div>
       {ceremony && <Ceremony child={active} onClose={() => setCeremony(false)} />}
     </>
@@ -168,10 +174,12 @@ function TopBar({
   child,
   starRef,
   onAvatar,
+  onStars,
 }: {
   child: Child
-  starRef: React.RefObject<HTMLSpanElement | null>
+  starRef: React.RefObject<HTMLButtonElement | null>
   onAvatar: () => void
+  onStars: () => void
 }) {
   const fam = useFamily()
   const [bump, setBump] = useState(false)
@@ -199,12 +207,12 @@ function TopBar({
         <span className="hi">{hi}</span>
         <span className="nm">{child.name}</span>
       </div>
-      <span ref={starRef} className={'pill' + (bump ? ' bump' : '')}>
+      <button ref={starRef} className={'pill' + (bump ? ' bump' : '')} onClick={onStars} aria-label="open stars">
         <StarToken size={16} glow /> {child.star_balance}
-      </span>
-      <span className="pill flame">
+      </button>
+      <button className="pill flame" onClick={onStars} aria-label="open stars streak">
         <SqzIcon name="flame" size={15} color="#FFC196" fill="#FF9A5A" /> {streak}
-      </span>
+      </button>
     </div>
   )
 }

@@ -9,6 +9,7 @@ export interface Parent {
   email: string
   parent_pin_hash: string | null
   ceremony_reminder: boolean
+  silly_mode: boolean
 }
 
 export interface Child {
@@ -94,6 +95,7 @@ export interface Dream {
 
 export interface HabitLibraryEntry {
   id: string
+  library_key?: string | null
   name: string
   icon: string
   kid_label: string
@@ -101,12 +103,19 @@ export interface HabitLibraryEntry {
   age_min: number
   age_max: number
   why_it_matters: string
+  sources_note?: string
   suggested_block: TimeBlock
+  suggested_frequency?: string
+  duration_min?: number
+  evidence_level?: string
+  source_urls?: string
+  is_active?: boolean
   mastery_signal: string
 }
 
 export interface LibraryActivity {
   id: string
+  activity_key?: string | null
   name: string
   illustration: string
   explainer: string
@@ -118,6 +127,27 @@ export interface LibraryActivity {
   cost: 'free' | 'cheap' | 'spendy'
   location_type: string
   suggested_tier: number
+  category?: string
+  why_good_reward?: string
+  source_urls?: string
+  is_active?: boolean
+}
+
+export interface SillyActivity {
+  id: string
+  silly_key: string
+  name: string
+  category: string
+  kid_prompt: string
+  materials: string
+  duration_min: number
+  energy: 'indoor' | 'outdoor' | 'either'
+  location_type: string
+  grownup_optional: boolean
+  why_it_adds_joy?: string
+  source_note?: string
+  source_urls?: string
+  is_active?: boolean
 }
 
 export interface ParentEdit {

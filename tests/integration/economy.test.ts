@@ -26,11 +26,11 @@ describe('complete_habit', () => {
     ])
   })
 
-  it('awards +1 for a core habit, instantly', async () => {
+  it('waits to award the core star until all scheduled cores are done', async () => {
     const res = await rpc(fam, 'complete_habit', { p_habit_id: coreA, p_on: daysAgo(0) })
-    expect(res.awarded).toBe(1)
+    expect(res.awarded).toBe(0)
     expect(res.star_day).toBe(false) // coreB still open
-    expect(await balance(fam)).toBe(1)
+    expect(await balance(fam)).toBe(0)
   })
 
   it('rejects a duplicate check-off', async () => {
@@ -45,16 +45,17 @@ describe('complete_habit', () => {
 
   it('completing the last core lights the star-day', async () => {
     const res = await rpc(fam, 'complete_habit', { p_habit_id: coreB, p_on: daysAgo(0) })
+    expect(res.awarded).toBe(1)
     expect(res.star_day).toBe(true)
     expect(res.streak).toBeGreaterThanOrEqual(1)
-    expect(await balance(fam)).toBe(2)
+    expect(await balance(fam)).toBe(1)
   })
 
-  it('bonus habit pays +2 once cores are done', async () => {
+  it('bonus habit pays +1 once cores are done', async () => {
     const res = await rpc(fam, 'complete_habit', { p_habit_id: bonus, p_on: daysAgo(0) })
-    expect(res.awarded).toBe(2)
+    expect(res.awarded).toBe(1)
     expect(res.all_done).toBe(true)
-    expect(await balance(fam)).toBe(4)
+    expect(await balance(fam)).toBe(2)
   })
 
   it('writes every award to the append-only ledger', async () => {
@@ -374,8 +375,8 @@ describe('finalize_week (the ceremony backend)', () => {
   })
 })
 
-describe('dreams — one active slot, enforced in schema', () => {
-  it('rejects a second active dream per child', async () => {
+describe('dreams — multiple active pledges', () => {
+  it('allows more than one active dream per child', async () => {
     const fam = await createFamily()
     await fam.client.from('dreams').insert({
       child_id: fam.childId,
@@ -389,8 +390,7 @@ describe('dreams — one active slot, enforced in schema', () => {
       pledge_text: 'should fail',
       stars_required: 5,
     })
-    expect(error).not.toBeNull()
-    expect(error!.message).toMatch(/one_active_dream_per_child|duplicate/)
+    expect(error).toBeNull()
   })
 })
 
