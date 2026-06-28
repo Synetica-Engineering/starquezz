@@ -83,15 +83,15 @@ test('full family journey: signup → wizard → kid loop → ceremony → diges
     }
   }
 
-  // stars were paid instantly — balance must be positive now
+  // stars were paid after the core set and bonus completions
   const balance = Number(await page.locator('.topbar .pill').first().innerText())
-  expect(balance).toBeGreaterThanOrEqual(3)
+  expect(balance).toBeGreaterThanOrEqual(1)
 
   // a completed card can be undone and redone (mis-tap forgiveness)
-  const undo = page.locator('.undo-chip').first()
+  const undo = page.locator('.habit.done', { hasText: /bonus/i }).locator('.undo-chip').first()
   if (await undo.isVisible().catch(() => false)) {
     const before = Number(await page.locator('.topbar .pill').first().innerText())
-    await page.locator('.habit.done .hcheck').first().click()
+    await page.locator('.habit.done', { hasText: /bonus/i }).locator('.hcheck').first().click()
     await expect
       .poll(async () => Number(await page.locator('.topbar .pill').first().innerText()))
       .toBeLessThan(before)

@@ -160,30 +160,36 @@ describe('ScoutChat (dynamic conversation)', () => {
 
   it('opens with a single warm, conversational question', () => {
     renderScout()
-    const firstPrompt = screen.getByText(/tell me a little about musbro's day/i)
+    const firstPrompt = screen.getByText(/what do you want musbro to become more confident doing/i)
     expect(firstPrompt.textContent?.match(/\?/g)).toHaveLength(1)
   })
 
-  it('responds dynamically after the first answer — acknowledges, then digs', async () => {
+  it('uses the approved one-question-at-a-time habit sequence', async () => {
     renderScout()
-    reply('Homework and bedtime are a battle.')
-    // offline fallback still acknowledges ("Wonderful — …") and asks a follow-up
-    expect(await screen.findByText(/wonderful/i)).toBeInTheDocument()
-    expect(screen.getByText(/what does musbro already do without being asked/i)).toBeInTheDocument()
-    // the chat turn calls the function (kind: 'chat'), not a proposal yet
-    expect(mocks.invoke).toHaveBeenCalledWith(
-      'scout',
-      expect.objectContaining({ body: expect.objectContaining({ kind: 'chat', topic: 'habits' }) }),
-    )
+    reply('Writing notes.')
+    expect(await screen.findByText(/what does musbro avoid or forget/i)).toBeInTheDocument()
+    reply('Packing his bag.')
+    expect(await screen.findByText(/what does musbro usually do without much help/i)).toBeInTheDocument()
+    reply('He reads by himself.')
+    expect(await screen.findByText(/when does musbro need the most help/i)).toBeInTheDocument()
+    reply('School mornings.')
+    expect(await screen.findByText(/what does musbro love right now/i)).toBeInTheDocument()
+    expect(mocks.invoke).not.toHaveBeenCalled()
   })
 
   it('reaches a ready-to-build gate that asks permission before generating', async () => {
     renderScout()
-    reply('Homework and bedtime are a battle.')
-    await screen.findByText(/what does musbro already do without being asked/i)
-    reply('He gets dressed on his own.')
-    // the Scout asks permission, and the explicit build button appears
-    expect(await screen.findByText(/want me to build musbro.s habits now/i)).toBeInTheDocument()
+    reply('Writing notes.')
+    await screen.findByText(/what does musbro avoid or forget/i)
+    reply('Packing his bag.')
+    await screen.findByText(/what does musbro usually do without much help/i)
+    reply('He reads by himself.')
+    await screen.findByText(/when does musbro need the most help/i)
+    reply('School mornings.')
+    await screen.findByText(/what does musbro love right now/i)
+    reply('Drawing and football.')
+    // Starquezz asks permission, and the explicit build button appears
+    expect(await screen.findByText(/want starquezz to build musbro.s habits now/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /build musbro.s habits/i })).toBeInTheDocument()
     // nothing was generated until the parent says yes
     expect(mocks.invoke).not.toHaveBeenCalledWith(
@@ -194,9 +200,15 @@ describe('ScoutChat (dynamic conversation)', () => {
 
   it('builds a grouped recommendation only after the parent confirms', async () => {
     renderScout()
-    reply('Homework and bedtime are a battle.')
-    await screen.findByText(/what does musbro already do without being asked/i)
-    reply('He gets dressed on his own.')
+    reply('Writing notes.')
+    await screen.findByText(/what does musbro avoid or forget/i)
+    reply('Packing his bag.')
+    await screen.findByText(/what does musbro usually do without much help/i)
+    reply('He reads by himself.')
+    await screen.findByText(/when does musbro need the most help/i)
+    reply('School mornings.')
+    await screen.findByText(/what does musbro love right now/i)
+    reply('Drawing and football.')
     const buildBtn = await screen.findByRole('button', { name: /build musbro.s habits/i })
 
     fireEvent.click(buildBtn)
@@ -215,9 +227,15 @@ describe('ScoutChat (dynamic conversation)', () => {
 
   it('lets the parent keep a subset and move on without deciding every card', async () => {
     renderScoutWithAdventures()
-    reply('Homework and bedtime are a battle.')
-    await screen.findByText(/what does musbro already do without being asked/i)
-    reply('He gets dressed on his own.')
+    reply('Writing notes.')
+    await screen.findByText(/what does musbro avoid or forget/i)
+    reply('Packing his bag.')
+    await screen.findByText(/what does musbro usually do without much help/i)
+    reply('He reads by himself.')
+    await screen.findByText(/when does musbro need the most help/i)
+    reply('School mornings.')
+    await screen.findByText(/what does musbro love right now/i)
+    reply('Drawing and football.')
     fireEvent.click(await screen.findByRole('button', { name: /build musbro.s habits/i }))
 
     await screen.findByText(/great for musbro.s age/i)

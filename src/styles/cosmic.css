@@ -714,6 +714,74 @@ textarea.input { resize: none; min-height: 76px; }
 .setup-choice-badge.research { background: #9FECFF; }
 .setup-choice-badge.ai { background: #FFE27A; }
 .setup-choice-copy { min-height: 82px; }
+.ai-working {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.4;
+  background:
+    radial-gradient(circle at 18% 28%, rgba(255, 226, 122, 0.16), transparent 34%),
+    #142146;
+}
+.ai-working-title {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-weight: 700;
+  font-size: 15px;
+}
+.ai-working-copy { color: var(--muted); }
+.ai-working-mark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 15px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 226, 122, 0.12);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 226, 122, 0.28);
+}
+.ai-working-mark::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: #FFE27A;
+  box-shadow: 0 0 16px rgba(255, 226, 122, 0.65);
+  transform: rotate(45deg);
+}
+.ai-working-mark span {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #9FECFF;
+  opacity: 0.7;
+}
+.ai-working-mark span:nth-child(1) { top: 7px; left: 10px; }
+.ai-working-mark span:nth-child(2) { right: 7px; top: 17px; background: #86f2c8; }
+.ai-working-mark span:nth-child(3) { bottom: 8px; left: 17px; background: #ff8ac2; }
+@media (prefers-reduced-motion: no-preference) {
+  .ai-working { animation: aiCardPulse 1.8s ease-in-out infinite; }
+  .ai-working-mark::before { animation: aiStarTurn 1.5s ease-in-out infinite; }
+  .ai-working-mark span { animation: aiDotOrbit 1.45s ease-in-out infinite; }
+  .ai-working-mark span:nth-child(2) { animation-delay: 0.18s; }
+  .ai-working-mark span:nth-child(3) { animation-delay: 0.36s; }
+}
+@keyframes aiCardPulse {
+  0%, 100% { box-shadow: inset 0 0 0 1.5px var(--line); }
+  50% { box-shadow: inset 0 0 0 1.5px rgba(159, 236, 255, 0.6), 0 0 18px rgba(159, 236, 255, 0.08); }
+}
+@keyframes aiStarTurn {
+  0%, 100% { transform: rotate(45deg) scale(0.94); }
+  50% { transform: rotate(135deg) scale(1.08); }
+}
+@keyframes aiDotOrbit {
+  0%, 100% { transform: translateY(0); opacity: 0.45; }
+  50% { transform: translateY(-4px); opacity: 1; }
+}
 .icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
 .icon-cell {
   aspect-ratio: 1; border-radius: 12px; border: none; cursor: pointer;

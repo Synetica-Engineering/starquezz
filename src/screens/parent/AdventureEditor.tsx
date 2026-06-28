@@ -29,6 +29,7 @@ interface AdvForm {
 export function AdventureEditor() {
   const fam = useFamily()
   const [form, setForm] = useState<AdvForm | null>(null)
+  const [ideaOpen, setIdeaOpen] = useState(false)
   const [library, setLibrary] = useState(false)
   const [idea, setIdea] = useState('')
   const [tidying, setTidying] = useState(false)
@@ -44,11 +45,13 @@ export function AdventureEditor() {
 
   const newAdventure = () => {
     setIdea('')
-    setForm({ name: '', illustration: 'tent', cost: 20, tier: 1, venue_note: '' })
+    setForm(null)
+    setIdeaOpen(true)
   }
 
   const closeForm = () => {
     setForm(null)
+    setIdeaOpen(false)
     setIdea('')
     setTidying(false)
   }
@@ -112,7 +115,7 @@ export function AdventureEditor() {
 
   const tidyIdea = async () => {
     const raw = idea.trim()
-    if (!form || !raw || tidying) return
+    if (!raw || tidying) return
     setTidying(true)
     try {
       const { data, error } = await supabase.functions.invoke('scout', {
@@ -124,8 +127,8 @@ export function AdventureEditor() {
       const illustration = typeof draft.illustration === 'string' && ADVENTURE_ICONS.includes(draft.illustration)
         ? draft.illustration
         : 'tent'
+      setIdeaOpen(false)
       setForm({
-        ...form,
         name: String(draft.name ?? '').slice(0, 48) || raw.slice(0, 48),
         illustration,
         tier,
@@ -133,8 +136,9 @@ export function AdventureEditor() {
         venue_note: String(draft.venue_note ?? '').slice(0, 60),
       })
     } catch {
+      setIdeaOpen(false)
       setForm(fallbackDraft(raw))
-      showToast('Scout is offline — made a simple draft')
+      showToast('Starquezz is offline — made a simple draft')
     } finally {
       setTidying(false)
     }
@@ -225,29 +229,35 @@ export function AdventureEditor() {
         )}
       </div>
 
+      {ideaOpen && (
+        <Sheet onClose={closeForm}>
+          <h3>New adventure</h3>
+          <div className="col gap12">
+            <div>
+              <label className="field-label" htmlFor="aidea">
+                Rough idea
+              </label>
+              <textarea
+                id="aidea"
+                className="input"
+                value={idea}
+                maxLength={240}
+                onChange={(e) => setIdea(e.target.value)}
+                placeholder="Swimming after school, pancake morning, library visit..."
+                style={{ minHeight: 112, resize: 'vertical' }}
+              />
+            </div>
+            <button className="btn full" disabled={!idea.trim() || tidying} onClick={() => void tidyIdea()}>
+              {tidying ? 'Starquezz is tidying...' : 'Create adventure'}
+            </button>
+          </div>
+        </Sheet>
+      )}
+
       {form && (
         <Sheet onClose={closeForm}>
           <h3>{form.id ? 'Edit adventure' : 'New adventure'}</h3>
           <div className="col gap12">
-            {!form.id && (
-              <div>
-                <label className="field-label" htmlFor="aidea">
-                  Rough idea
-                </label>
-                <textarea
-                  id="aidea"
-                  className="input"
-                  value={idea}
-                  maxLength={240}
-                  onChange={(e) => setIdea(e.target.value)}
-                  placeholder="Swimming after school, pancake morning, library visit..."
-                  style={{ minHeight: 82, resize: 'vertical' }}
-                />
-                <button className="btn full" disabled={!idea.trim() || tidying} onClick={() => void tidyIdea()}>
-                  {tidying ? 'Scout is tidying...' : 'Tidy with Scout'}
-                </button>
-              </div>
-            )}
             <div>
               <label className="field-label" htmlFor="aname">
                 Name — the experience, never the object

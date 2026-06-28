@@ -94,8 +94,8 @@ $$;
 
 -- ============================================================ kid loop
 
--- Check off a habit. +1 core / +2 bonus, instantly (the star-flight moment).
--- Bonus habits unlock only after all cores are done — no cherry-picking.
+-- Check off a habit. The whole core set pays +1 when it becomes complete;
+-- each bonus habit pays +1 after cores are done. No cherry-picking.
 create or replace function complete_habit(p_habit_id uuid, p_on date default current_date)
 returns json language plpgsql security definer set search_path = public as $$
 declare
@@ -122,13 +122,10 @@ begin
   end if;
 
   if not h.is_core then
-    -- bonus pays more but only counts when the foundation is done
+    -- bonus pays only once the foundation is done
     if not star_day_complete(h.child_id, p_on) then
       raise exception 'cores_incomplete';
     end if;
-    v_award := 2;
-  else
-    v_award := 1;
   end if;
 
   begin
@@ -137,11 +134,9 @@ begin
     raise exception 'already_done';
   end;
 
-  insert into star_events (child_id, delta, reason, ref_id)
-  values (h.child_id, v_award, case when h.is_core then 'habit_checkoff' else 'bonus_habit' end::star_reason, p_habit_id);
-
   if h.is_core then
     v_star_day := star_day_complete(h.child_id, p_on);
+    v_award := case when v_star_day then 1 else 0 end;
     if v_star_day then
       v_streak := compute_streak(h.child_id, p_on);
       -- early momentum hook: the run's 3rd consecutive star-day pays +3, once
@@ -157,6 +152,18 @@ begin
   else
     v_star_day := true; -- cores were already done
     v_streak := compute_streak(h.child_id, p_on);
+    v_award := 1;
+  end if;
+
+  if v_award > 0 then
+    insert into star_events (child_id, delta, reason, ref_id, note)
+    values (
+      h.child_id,
+      v_award,
+      case when h.is_core then 'habit_checkoff' else 'bonus_habit' end::star_reason,
+      p_habit_id,
+      'completion:' || p_on::text
+    );
   end if;
 
   update children set star_balance = star_balance + v_award + v_streak_bonus
@@ -186,7 +193,6 @@ returns json language plpgsql security definer set search_path = public as $$
 declare
   h habits%rowtype;
   c completions%rowtype;
-  v_award int;
   v_reversed int := 0;
 begin
   select * into h from habits where id = p_habit_id;
@@ -199,12 +205,23 @@ begin
     raise exception 'undo_window_passed';
   end if;
 
-  v_award := case when h.is_core then 1 else 2 end;
+  select coalesce(sum(e.delta), 0) into v_reversed
+  from star_events e
+  where e.child_id = h.child_id
+    and e.ref_id = p_habit_id
+    and e.reason in ('habit_checkoff', 'bonus_habit')
+    and e.delta > 0
+    and (
+      e.note = 'completion:' || p_on::text
+      or (e.note is null and e.created_at >= c.created_at - interval '1 second')
+    );
+
   delete from completions where id = c.id;
 
-  insert into star_events (child_id, delta, reason, ref_id)
-  values (h.child_id, -v_award, 'undo', p_habit_id);
-  v_reversed := v_award;
+  if v_reversed > 0 then
+    insert into star_events (child_id, delta, reason, ref_id, note)
+    values (h.child_id, -v_reversed, 'undo', p_habit_id, 'uncompletion:' || p_on::text);
+  end if;
 
   -- if this check-off had just minted the 3-day bonus, take it back too
   if exists (

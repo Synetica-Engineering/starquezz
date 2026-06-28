@@ -170,7 +170,7 @@ export function Board({
               </span>
               <div className="hbody">
                 <div className="hname">{h.name}</div>
-                <div className="hsub">{h.is_core ? '+1 ✦' : 'bonus · +2 ✦'}</div>
+                <div className="hsub">{h.is_core ? 'core set · +1 ✦' : 'bonus · +1 ✦'}</div>
               </div>
               <button
                 className="hcheck"

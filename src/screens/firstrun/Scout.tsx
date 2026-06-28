@@ -1,8 +1,8 @@
-// The Scout — conversational setup (AGENT_BRIEF §5a).
+// Starquezz conversational setup (AGENT_BRIEF §5a).
 // Parent-side only. The LLM proposes; deterministic code disposes: drafts are
 // schema-shaped rows rendered as accept/edit/skip cards, and only accepted
 // rows are written. Stars/streaks are never computed here.
-// When the LLM proxy is unreachable (no key, offline, rate-limited) the Scout
+// When the LLM proxy is unreachable (no key, offline, rate-limited) Starquezz
 // falls back to library-grounded rule-based proposals — the no-LLM path.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
@@ -53,8 +53,14 @@ const TIER_COST: Record<number, number> = { 0: 0, 1: 20, 2: 40, 3: 80 }
 // even if the model wants to keep going.
 const QUESTION_BUDGET = 9
 
-const habitOpener = (name: string) =>
-  `Tell me a little about ${name}'s day — which bits go smoothly, and which ones are a daily tug-of-war right now?`
+const habitQuestions = (name: string) => [
+  `What do you want ${name} to become more confident doing?`,
+  `What does ${name} avoid or forget?`,
+  `What does ${name} usually do without much help?`,
+  `When does ${name} need the most help?`,
+  `What does ${name} love right now?`,
+]
+const habitOpener = (name: string) => habitQuestions(name)[0]
 const advOpener = (name: string) =>
   `Now the fun part — what does ${name} love doing with you? Parks, pools, bookshops, building forts… what lights them up?`
 
@@ -62,9 +68,9 @@ const advOpener = (name: string) =>
 // acknowledges the first answer and digs once, then asks permission to build.
 function scriptedTurn(topic: 'habits' | 'adventures', answerNo: number, name: string): { reply: string; ready: boolean } {
   if (topic === 'habits') {
-    if (answerNo === 1)
-      return { reply: `Wonderful — that gives me a real feel for ${name}'s day. What does ${name} already do without being asked?`, ready: false }
-    return { reply: `Lovely — that's plenty to start with. Want me to build ${name}'s habits now?`, ready: true }
+    const nextQuestion = habitQuestions(name)[answerNo]
+    if (nextQuestion) return { reply: nextQuestion, ready: false }
+    return { reply: `Want Starquezz to build ${name}'s habits now?`, ready: true }
   }
   if (answerNo === 1)
     return { reply: `Oh, those are lovely. Any weekend limits I should design around — budget, time, travel? Or I can build the menu right now.`, ready: true }
@@ -247,13 +253,19 @@ export function ScoutChat({
     let reply: string
     let ready: boolean
     try {
-      if (scoutMode === 'offline') throw new Error('already-offline') // skip the network round-trip
-      const turn = await chatTurn(newMsgs, topic)
-      setScoutMode('online')
-      reply = turn.reply
-      ready = turn.ready
+      if (topic === 'habits') {
+        const s = scriptedTurn(topic, answerNo, name)
+        reply = s.reply
+        ready = s.ready
+      } else {
+        if (scoutMode === 'offline') throw new Error('already-offline') // skip the network round-trip
+        const turn = await chatTurn(newMsgs, topic)
+        setScoutMode('online')
+        reply = turn.reply
+        ready = turn.ready
+      }
     } catch {
-      setScoutMode('offline')
+      if (topic !== 'habits') setScoutMode('offline')
       const s = scriptedTurn(topic, answerNo, name)
       reply = s.reply
       ready = s.ready
@@ -327,7 +339,7 @@ export function ScoutChat({
   const habitAcceptedCount = Object.values(habitState).filter((s) => s === 'accepted').length
   const advAcceptedCount = Object.values(advState).filter((s) => s === 'accepted').length
   const inChat = phase === 'chatHabits' || phase === 'chatAdvs'
-  const replyPlaceholder = phase === 'chatHabits' ? 'Tell the Scout about them…' : 'Your reply…'
+  const replyPlaceholder = phase === 'chatHabits' ? 'Tell Starquezz about them…' : 'Your reply…'
 
   const draftCard = (
     kind: 'habit' | 'adv',
@@ -385,7 +397,7 @@ export function ScoutChat({
     <div className="view" style={{ minHeight: 0 }}>
       <div className="parent-head">
         <Zee size={38} mood="awake" />
-        <span className="pt grow">Scout</span>
+        <span className="pt grow">Starquezz</span>
         <button className="chip skip" onClick={onManual}>
           skip — I’ll do it myself
         </button>
@@ -399,7 +411,7 @@ export function ScoutChat({
             </div>
           ))}
           {thinking && (
-            <div className="bubble bot typing" aria-label="Scout is thinking">
+            <div className="bubble bot typing" aria-label="Starquezz is thinking">
               <i></i>
               <i></i>
               <i></i>
@@ -409,12 +421,12 @@ export function ScoutChat({
 
         {scoutMode === 'offline' && inChat && (
           <div className="nudge-card" role="status" style={{ fontSize: 12.5 }}>
-            Scout’s AI is offline right now, so it’s using quick guided questions and library-based
+            Starquezz is offline right now, so it’s using quick guided questions and library-based
             suggestions. Everything still works.
           </div>
         )}
 
-        {/* the ready-to-build gate — appears once the Scout has enough */}
+        {/* the ready-to-build gate — appears once Starquezz has enough */}
         {phase === 'chatHabits' && readyHabits && !thinking && (
           <button className="btn full" onClick={() => void buildHabits()}>
             Build {name}’s habits ✦
@@ -441,7 +453,7 @@ export function ScoutChat({
                   {items.map(({ d, i }) =>
                     draftCard(
                       'habit', i, d.icon, d.name,
-                      `${d.is_core ? 'core · +1 ✦' : 'bonus · +2 ✦'} · ${d.category}`,
+                      `${d.is_core ? 'core set · +1 ✦' : 'bonus · +1 ✦'} · ${d.category}`,
                       d.why,
                       habitState[i],
                       (s) => setHabitState((p) => ({ ...p, [i]: s })),

@@ -1,5 +1,5 @@
 // Setup wizard — must produce a working app in under 5 minutes, no seed
-// scripts (v1 lesson #4). The Scout (chat) is the front door once available;
+// scripts (v1 lesson #4). The Starquezz chat is the front door once available;
 // this manual path is the always-working fallback and the editors' backbone.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
@@ -12,6 +12,8 @@ import { AvatarPicker } from '../../components/AvatarPicker'
 import { ScoutChat } from './Scout'
 import { activeDaysForFrequency } from '../../lib/habits'
 import type { HabitCategory, HabitLibraryEntry, LibraryActivity, TimeBlock } from '../../lib/types'
+import setupRecommendedHabits from '../../../public/illustrations/setup-recommended-habits.jpg'
+import setupScoutConversation from '../../../public/illustrations/setup-scout-conversation.jpg'
 
 interface HabitChoice {
   id: string
@@ -68,6 +70,27 @@ function starterRank(entry: HabitLibraryEntry, age: number): number {
   return starterNameRank(entry.name, age)
 }
 
+function hashString(input: string): number {
+  let hash = 2166136261
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  return hash >>> 0
+}
+
+function seededScore(seed: string, value: string): number {
+  return hashString(`${seed}|${value}`)
+}
+
+function interestCount(value: string): number {
+  const count = value
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean).length
+  return Math.max(0, Math.min(3, count))
+}
+
 function normalizeHabitName(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, ' ')
 }
@@ -89,6 +112,7 @@ function buildHabitChoices(
   library: HabitLibraryEntry[],
   age: number,
   suggestedCores: number,
+  seed: string,
 ): HabitChoice[] {
   const eligible = library
     .filter((entry) => entry.is_active !== false && age >= entry.age_min && age <= entry.age_max)
@@ -103,7 +127,11 @@ function buildHabitChoices(
       }
       const rank = habitRank(a) - habitRank(b)
       if (rank !== 0) return rank
-      return (a.duration_min ?? 10) - (b.duration_min ?? 10) || a.name.localeCompare(b.name)
+      return (
+        (a.duration_min ?? 10) - (b.duration_min ?? 10) ||
+        seededScore(seed, a.id) - seededScore(seed, b.id) ||
+        a.name.localeCompare(b.name)
+      )
     })
 
   const coreNames = new Set<string>()
@@ -111,21 +139,21 @@ function buildHabitChoices(
     .map((entry) => ({ entry, rank: starterRank(entry, age) }))
     .filter(({ rank }) => rank >= 0)
     .sort((a, b) => a.rank - b.rank)
-    .map(({ entry }) => entry)
+      .map(({ entry }) => entry)
 
-  for (const entry of preferredStarters) {
+  for (const entry of preferredStarters.slice().sort((a, b) => seededScore(seed, a.id) - seededScore(seed, b.id))) {
     if (coreNames.size >= suggestedCores) break
     coreNames.add(entry.name)
   }
-  for (const category of CORE_CATEGORY_ORDER) {
+  for (const category of CORE_CATEGORY_ORDER.slice().sort((a, b) => seededScore(seed, a) - seededScore(seed, b))) {
     if (coreNames.size >= suggestedCores) break
-    const pick = eligible.find(
-      (entry) => entry.category === category && isStarterFriendly(entry) && !coreNames.has(entry.name),
-    )
+    const pick = eligible
+      .filter((entry) => entry.category === category && isStarterFriendly(entry) && !coreNames.has(entry.name))
+      .sort((a, b) => seededScore(seed, a.id) - seededScore(seed, b.id))[0]
     if (pick) coreNames.add(pick.name)
     if (coreNames.size >= suggestedCores) break
   }
-  for (const entry of eligible) {
+  for (const entry of eligible.slice().sort((a, b) => seededScore(seed, a.id) - seededScore(seed, b.id))) {
     if (coreNames.size >= suggestedCores) break
     coreNames.add(entry.name)
   }
@@ -153,107 +181,17 @@ interface InterestHabitDraft {
   why?: string
 }
 
-function fallbackInterestDrafts(interests: string): InterestHabitDraft[] {
-  const lower = interests.toLowerCase()
-  const drafts: InterestHabitDraft[] = []
-  if (/(piano|keyboard)/i.test(lower)) {
-    drafts.push({
-      name: 'Practice piano keys for 5 minutes',
-      icon: '🎹',
-      category: 'mind',
-      time_block: 'afternoon',
-      duration_min: 5,
-      why: 'Short daily practice builds confidence without turning music into a chore.',
-    })
-  } else if (/(guitar|ukulele|violin|drum|music|sing)/i.test(lower)) {
-    drafts.push({
-      name: 'Practice instrument for 10 minutes',
-      icon: '🎵',
-      category: 'mind',
-      time_block: 'afternoon',
-      duration_min: 10,
-      why: 'A tiny daily session makes music feel familiar and trackable.',
-    })
-  }
-  if (/(count|number|math|lego|block)/i.test(lower)) {
-    drafts.push({
-      name: 'Count 10 tiny things',
-      icon: '🔢',
-      category: 'mind',
-      time_block: 'afternoon',
-      duration_min: 5,
-      why: 'Counting real objects keeps early math concrete and playful.',
-    })
-    drafts.push({
-      name: 'Solve three tiny math facts',
-      icon: '✏️',
-      category: 'mind',
-      time_block: 'afternoon',
-      duration_min: 5,
-      why: 'A very small math rep builds fluency without making practice feel huge.',
-    })
-  }
-  if (/(draw|paint|art|color|colour|craft)/i.test(lower)) {
-    drafts.push({
-      name: 'Draw one tiny picture',
-      icon: '🎨',
-      category: 'mind',
-      time_block: 'afternoon',
-      duration_min: 5,
-      why: 'A small daily drawing builds fine-motor control and creative confidence.',
-    })
-  }
-  if (/(dino|animal|bug|bird|nature|plant)/i.test(lower)) {
-    drafts.push({
-      name: 'Notice one nature detail',
-      icon: '🌱',
-      category: 'mind',
-      time_block: 'afternoon',
-      duration_min: 5,
-      why: 'Quick observation practice strengthens attention and curiosity.',
-    })
-  }
-  if (drafts.length < 3) {
-    drafts.push(
-      {
-        name: 'Teach a favorite fact',
-        icon: '💡',
-        category: 'mind',
-        time_block: 'afternoon',
-        duration_min: 5,
-        why: 'Explaining one thing they love turns interest into language practice.',
-      },
-      {
-        name: 'Make a tiny interest sketch',
-        icon: '✏️',
-        category: 'mind',
-        time_block: 'afternoon',
-        duration_min: 5,
-        why: 'A quick sketch helps memory, planning, and hand control.',
-      },
-      {
-        name: 'Put away one activity set',
-        icon: '🧱',
-        category: 'space',
-        time_block: 'afternoon',
-        duration_min: 5,
-        why: 'A simple cleanup loop helps interests stay easy to restart tomorrow.',
-      },
-    )
-  }
-  return drafts.slice(0, 3)
-}
-
 function buildInterestHabitChoices(
   drafts: InterestHabitDraft[],
   baseChoices: HabitChoice[],
+  limit: number,
 ): HabitChoice[] {
   const byName = new Map(baseChoices.map((choice) => [normalizeHabitName(choice.name), choice]))
   const used = new Set<string>()
   const choices: HabitChoice[] = []
 
   for (const draft of drafts) {
-    if (choices.length >= 3) break
+    if (choices.length >= limit) break
     const name = String(draft.name ?? '').trim().slice(0, 60)
     if (!name) continue
     const key = normalizeHabitName(name)
@@ -333,16 +271,19 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
   const [interests, setInterests] = useState('')
   const [avatar, setAvatar] = useState('cat')
   const [photo, setPhoto] = useState<string | null>(null)
+  const [libraryPickSeed, setLibraryPickSeed] = useState(() => String(Date.now()))
   const age = thisYear - birthYear
 
   const suggestedCores = age <= 5 ? 2 : age <= 8 ? 5 : 4
   const baseHabitChoices = useMemo(
-    () => buildHabitChoices(fam.habitLibrary, age, suggestedCores),
-    [age, fam.habitLibrary, suggestedCores],
+    () => buildHabitChoices(fam.habitLibrary, age, suggestedCores, libraryPickSeed),
+    [age, fam.habitLibrary, libraryPickSeed, suggestedCores],
   )
   const [interestHabitChoices, setInterestHabitChoices] = useState<HabitChoice[]>([])
-  const [interestHabitKey, setInterestHabitKey] = useState('')
+  const interestHabitKey = useRef('')
   const [interestHabitLoading, setInterestHabitLoading] = useState(false)
+  const [interestHabitError, setInterestHabitError] = useState<string | null>(null)
+  const [interestHabitRun, setInterestHabitRun] = useState(0)
   const habitChoices = useMemo(() => {
     const interestNames = new Set(interestHabitChoices.map((h) => normalizeHabitName(h.name)))
     return [
@@ -406,17 +347,21 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
 
   useEffect(() => {
     const trimmedInterests = interests.trim()
+    const desiredInterestCount = interestCount(trimmedInterests)
     const nextKey = `${age}|${trimmedInterests.toLowerCase()}`
     if (step !== 'habits') return
-    if (!trimmedInterests) {
+    if (!trimmedInterests || desiredInterestCount === 0) {
       setInterestHabitChoices([])
-      setInterestHabitKey('')
+      interestHabitKey.current = ''
+      setInterestHabitError(null)
+      setInterestHabitLoading(false)
       return
     }
-    if (interestHabitKey === nextKey) return
+    if (interestHabitKey.current === nextKey) return
 
     let cancelled = false
-    setInterestHabitKey(nextKey)
+    interestHabitKey.current = nextKey
+    setInterestHabitError(null)
     setInterestHabitLoading(true)
     void (async () => {
       try {
@@ -429,15 +374,21 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
                 age,
                 interests: trimmedInterests,
               },
+              count: desiredInterestCount,
             },
           }),
-          2500,
+          20000,
         )
-        const raw = Array.isArray(data?.habits) && !error ? data.habits : fallbackInterestDrafts(trimmedInterests)
-        if (!cancelled) setInterestHabitChoices(buildInterestHabitChoices(raw, baseHabitChoices))
+        const raw = Array.isArray(data?.habits) && !error ? data.habits : []
+        if (!cancelled) {
+          const choices = buildInterestHabitChoices(raw, baseHabitChoices, desiredInterestCount)
+          setInterestHabitChoices(choices)
+          setInterestHabitError(choices.length === 0 ? 'Starquezz could not add interest ideas right now.' : null)
+        }
       } catch {
         if (!cancelled) {
-          setInterestHabitChoices(buildInterestHabitChoices(fallbackInterestDrafts(trimmedInterests), baseHabitChoices))
+          setInterestHabitChoices([])
+          setInterestHabitError('Starquezz could not add interest ideas right now.')
         }
       } finally {
         if (!cancelled) setInterestHabitLoading(false)
@@ -447,7 +398,7 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
     return () => {
       cancelled = true
     }
-  }, [age, baseHabitChoices, interestHabitKey, interests, name, step])
+  }, [age, baseHabitChoices, interests, interestHabitRun, name, step])
 
   useLayoutEffect(() => {
     const next = new Map<string, number>()
@@ -484,9 +435,15 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
   }
 
   const openManualHabits = () => {
-    const trimmedInterests = interests.trim()
-    if (trimmedInterests) {
-      setInterestHabitChoices(buildInterestHabitChoices(fallbackInterestDrafts(trimmedInterests), baseHabitChoices))
+    if (interests.trim()) {
+      interestHabitKey.current = ''
+      setInterestHabitChoices([])
+      setInterestHabitError(null)
+      setInterestHabitLoading(true)
+      setLibraryPickSeed(`${Date.now()}|${Math.random()}`)
+      setInterestHabitRun((run) => run + 1)
+    } else {
+      setLibraryPickSeed(`${Date.now()}|${Math.random()}`)
     }
     setStep('habits')
   }
@@ -610,9 +567,11 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
       setInterests('')
       setAvatar('cat')
       setPhoto(null)
+      setLibraryPickSeed(`${Date.now()}|${Math.random()}`)
       setInterestHabitChoices([])
-      setInterestHabitKey('')
+      interestHabitKey.current = ''
       setInterestHabitLoading(false)
+      setInterestHabitError(null)
       setPickedHabits(new Set())
       setPickedHabitOrder([])
       setPickedAdvs(new Set())
@@ -805,7 +764,7 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
               <span className="setup-choice-art-wrap">
                 <img
                   className="setup-choice-art"
-                  src="/illustrations/setup-recommended-habits.jpg"
+                  src={setupRecommendedHabits}
                   alt=""
                   aria-hidden
                 />
@@ -824,7 +783,7 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
               <span className="setup-choice-art-wrap">
                 <img
                   className="setup-choice-art"
-                  src="/illustrations/setup-scout-conversation.jpg"
+                  src={setupScoutConversation}
                   alt=""
                   aria-hidden
                 />
@@ -835,7 +794,7 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
                   Build custom in conversation mode
                 </span>
                 <span className="muted" style={{ fontSize: 13.5, lineHeight: 1.45 }}>
-                  Talk with the Scout and shape a routine around your kid.
+                  Talk with Starquezz and shape a routine around your kid.
                 </span>
               </span>
             </button>
@@ -863,8 +822,32 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
               </div>
             )}
             {interestHabitLoading && (
+              <div className="pcard ai-working" role="status" aria-live="polite">
+                <span className="ai-working-mark" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </span>
+                <span className="col gap2">
+                  <span className="ai-working-title">Starquezz is thinking</span>
+                  <span className="ai-working-copy">Building kid-fit ideas from {interests.trim()}…</span>
+                </span>
+              </div>
+            )}
+            {!interestHabitLoading && interestHabitError && interests.trim() && (
               <div className="pcard muted" style={{ fontSize: 13.5, lineHeight: 1.45 }}>
-                Adding a few ideas from what {name || 'they'} is into…
+                {interestHabitError}{' '}
+                <button
+                  className="chip skip"
+                  onClick={() => {
+                    interestHabitKey.current = ''
+                    setInterestHabitError(null)
+                    setInterestHabitLoading(true)
+                    setInterestHabitRun((run) => run + 1)
+                  }}
+                >
+                  Try again
+                </button>
               </div>
             )}
             {orderedHabitChoices.map((h) => {
@@ -888,7 +871,7 @@ export function Wizard({ onDone, firstChild }: { onDone: () => void; firstChild:
                     <span className="pr-sub">
                       {h.suggestedFrequency ?? 'daily'} · {h.durationMin ?? 10} min ·{' '}
                       {h.source === 'interest' ? 'from interests · ' : ''}
-                      {h.core ? 'core · +1 ✦' : 'bonus · +2 ✦'}
+                      {h.core ? 'core set · +1 ✦' : 'bonus · +1 ✦'}
                     </span>
                   </span>
                   <span className={'toggle' + (on ? ' on' : '')} aria-hidden />

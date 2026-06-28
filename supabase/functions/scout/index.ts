@@ -12,7 +12,7 @@ const ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001'
 // caps abuse without choking a legitimate multi-kid session. Tune in prod.
 const MAX_CALLS_PER_DAY = 80
 
-const SYSTEM = `You are the Scout, the setup assistant inside Starquezz — a free, kid-run habit app where star tokens buy shared family adventures, never toys or money.
+const SYSTEM = `You are Starquezz, the setup assistant inside the Starquezz app — a free, kid-run habit app where star tokens buy shared family adventures, never toys or money.
 
 Non-negotiable principles you must never violate in any suggestion:
 1. The adventure always happens — stars decide WHICH, never WHETHER. Never imply a child earns time with a parent.
@@ -25,10 +25,11 @@ HABIT PROPOSALS specifically: return EXACTLY 9 candidate habits as a recommendat
 - The FIRST 5 must be directly tailored to what the parent told you in the conversation (set source="conversation") — name them so the parent recognises their own words and struggles.
 - The LAST 4 must be strong, age-appropriate staples that fit the child even though they weren't discussed (set source="age").
 - These 9 are CANDIDATES, not all active. Among them, mark only a few as is_core following the balance heuristic above (2 cores at age ≤5, 3 at 6-7, ≤4 at 8+); the rest are bonus. The parent accepts the ones they want.
+- Parent answers usually follow this sequence: confidence goal, avoided/forgotten task, what the child does without much help, when the child needs the most help, current loves/interests. Use those answers to search for close database-like habits first; invent a custom habit only when a direct habit-library style match would not fit.
 
 You ask nothing back; you emit proposals via the tool. Each proposal carries a short "why" the parent learns from (research-informed, plainly worded, no citation theater). Use the parent's own words about the kid. Habit icons must be colorful emoji, not icon names.`
 
-const CHAT_SYSTEM = `You are the Scout, a warm setup assistant inside Starquezz — a kids' habit app where stars buy shared family adventures, never toys or money.
+const CHAT_SYSTEM = `You are Starquezz, a warm setup assistant inside the Starquezz app — a kids' habit app where stars buy shared family adventures, never toys or money.
 
 You're having a focused conversation with a parent to understand their child before suggesting either HABITS or ADVENTURES. Behave exactly like this:
 - React warmly and specifically to what they just said (e.g. "Wonderful — ..." / "Oh, that's lovely —") in ONE short sentence, then ask ONE focused follow-up that digs deeper: for habits, what the child already does unprompted, where the day breaks down, and the one thing the parent most wants to strengthen; for adventures, what the family loves doing together and any weekend limits (budget, time, travel).
@@ -95,15 +96,15 @@ const HABIT_TOOL = {
 
 const INTEREST_HABIT_SYSTEM = `${SYSTEM}
 
-INTEREST HABITS specifically: return EXACTLY 3 tiny daily habit options inspired by the parent's "into right now" field.
+INTEREST HABITS specifically: return 1 to 3 tiny daily habit options inspired by the parent's "into right now" field.
 - Every habit must be child-actionable, daily, and doable in 15 minutes or less.
 - No parent-only environment rules, no occasional conflict/repair tasks, no rewards, no screen rules.
-- The first habit should be the strongest fit to preselect; the other two are optional alternatives.
+- The first habit should be the strongest fit to preselect; any others are optional alternatives.
 - Use the parent's words when useful, but make the habit concrete enough to track.`
 
 const INTEREST_HABIT_TOOL = {
   name: 'propose_interest_habits',
-  description: 'Propose three tiny daily habit options inspired by a child interest field',
+  description: 'Propose tiny daily habit options inspired by a child interest field',
   input_schema: {
     type: 'object',
     properties: {
@@ -131,6 +132,33 @@ const INTEREST_HABIT_TOOL = {
       },
     },
     required: ['habits'],
+  },
+}
+
+const CUSTOM_HABIT_TOOL = {
+  name: 'tidy_custom_habit',
+  description: 'Turn one rough parent idea into a Starquezz habit draft',
+  input_schema: {
+    type: 'object',
+    properties: {
+      habit: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', maxLength: 40, description: 'Short kid-facing action phrase' },
+          icon: {
+            type: 'string',
+            minLength: 1,
+            maxLength: 8,
+            description: 'One colorful emoji that visually represents the habit, such as 🪥, 📚, 🎹, 🧹, 🥤, 🏃, or 💛.',
+          },
+          category: { type: 'string', enum: ['body', 'mind', 'space', 'heart'] },
+          time_block: { type: 'string', enum: ['morning', 'afternoon', 'evening'] },
+          is_core: { type: 'boolean' },
+        },
+        required: ['name', 'icon', 'category', 'time_block', 'is_core'],
+      },
+    },
+    required: ['habit'],
   },
 }
 
@@ -201,8 +229,10 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   const headers = { ...cors, 'Content-Type': 'application/json' }
-  const fail = (status: number, error: string) =>
-    new Response(JSON.stringify({ error }), { status, headers })
+  const fail = (status: number, error: string) => {
+    console.error('scout_fail', JSON.stringify({ status, error }))
+    return new Response(JSON.stringify({ error }), { status, headers })
+  }
 
   try {
     // Prefer cheap/fast DeepSeek V4 Flash, either direct or through OpenRouter.
@@ -222,27 +252,26 @@ Deno.serve(async (req) => {
     if (userErr || !userData.user) return fail(401, 'not_authenticated')
 
     // rate limit per account per day
-    const service = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
     const dayAgo = new Date(Date.now() - 86400_000).toISOString()
-    const { count } = await service
+    const { count, error: countErr } = await supa
       .from('scout_sessions')
       .select('id', { count: 'exact', head: true })
       .eq('parent_id', userData.user.id)
       .gte('created_at', dayAgo)
+    if (countErr) return fail(500, 'rate_limit_unavailable')
     if ((count ?? 0) >= MAX_CALLS_PER_DAY) return fail(429, 'rate_limited')
-    await service.from('scout_sessions').insert({ parent_id: userData.user.id })
+    const { error: insertErr } = await supa.from('scout_sessions').insert({ parent_id: userData.user.id })
+    if (insertErr) return fail(500, 'rate_limit_unavailable')
 
-    const { kind, topic, profile, conversation, packet, idea } = await req.json()
-    if (kind !== 'habits' && kind !== 'adventures' && kind !== 'chat' && kind !== 'interest_habits' && kind !== 'custom_adventure') return fail(400, 'bad_kind')
+    const { kind, topic, profile, conversation, packet, idea, count: requestedCount } = await req.json()
+    console.log('scout_request', JSON.stringify({ kind, hasProfile: Boolean(profile), hasIdea: Boolean(idea) }))
+    if (kind !== 'habits' && kind !== 'adventures' && kind !== 'chat' && kind !== 'interest_habits' && kind !== 'custom_habit' && kind !== 'custom_adventure') return fail(400, 'bad_kind')
 
     // privacy: send the minimum — age, interests, the parent's own words.
     const childLine = `Child: age ${Number(profile?.age) || 'unknown'}${profile?.name ? `, called ${String(profile.name).slice(0, 30)}` : ''}${profile?.interests ? `, into: ${String(profile.interests).slice(0, 200)}` : ''}.`
     const convo = (Array.isArray(conversation) ? conversation : [])
       .slice(-12)
-      .map((m: { who: string; text: string }) => `${m.who === 'me' ? 'Parent' : 'Scout'}: ${String(m.text).slice(0, 600)}`)
+      .map((m: { who: string; text: string }) => `${m.who === 'me' ? 'Parent' : 'Starquezz'}: ${String(m.text).slice(0, 600)}`)
       .join('\n')
 
     // ---- conversational turn: returns { reply, ready } ----
@@ -256,12 +285,31 @@ Deno.serve(async (req) => {
 
     // ---- interest quick-adds: returns { habits } for the manual setup path ----
     if (kind === 'interest_habits') {
+      const habitCount = Math.max(1, Math.min(3, Number(requestedCount) || 1))
       const prompt = `${childLine}
 
 Parent wrote this in the "Into right now" field: "${String(profile?.interests ?? '').slice(0, 240)}"
 
-Propose exactly 3 daily habit options that make those interests show up in the routine.`
+Propose 3 daily habit options that make those interests show up in the routine. Put the best ${habitCount} option${habitCount === 1 ? '' : 's'} first.`
       const proposal = await callTool({ deepseekKey, openrouterKey, anthropicKey, system: INTEREST_HABIT_SYSTEM, tool: INTEREST_HABIT_TOOL, prompt })
+      if (!proposal) return fail(502, 'no_proposal')
+      return new Response(JSON.stringify(proposal), { headers })
+    }
+
+    // ---- one-off custom habit: parent gives a rough idea; Scout tidies it
+    if (kind === 'custom_habit') {
+      const parentIdea = String(idea ?? '').trim().slice(0, 400)
+      if (!parentIdea) return fail(400, 'missing_idea')
+      const prompt = `${childLine}
+
+Parent wants to add this habit idea: "${parentIdea}"
+
+Tidy it into one Starquezz habit draft. Keep the spirit, but enforce the principles:
+- Make it a concrete kid action, not a parent instruction or vague value.
+- Keep it small enough to do on an ordinary day, usually 2-15 minutes.
+- Choose the best emoji, category, and rough time block.
+- Mark is_core=true only if it should count toward the child's daily foundation; otherwise use bonus.`
+      const proposal = await callTool({ deepseekKey, openrouterKey, anthropicKey, system: SYSTEM, tool: CUSTOM_HABIT_TOOL, prompt })
       if (!proposal) return fail(502, 'no_proposal')
       return new Response(JSON.stringify(proposal), { headers })
     }
@@ -288,7 +336,7 @@ Tidy it into one Starquezz adventure draft. Keep the spirit, but enforce the pri
     // ---- proposal: returns { habits } or { adventures } ----
     const tool = kind === 'habits' ? HABIT_TOOL : ADV_TOOL
     const scoutPacket = formatPacket(packet)
-    const prompt = `${childLine}${scoutPacket ? `\n\nScout packet:\n${scoutPacket}` : ''}\n\nConversation so far:\n${convo}\n\nPropose ${kind} now.`
+    const prompt = `${childLine}${scoutPacket ? `\n\nStarquezz packet:\n${scoutPacket}` : ''}\n\nConversation so far:\n${convo}\n\nPropose ${kind} now.`
     const proposal = await callTool({ deepseekKey, openrouterKey, anthropicKey, system: SYSTEM, tool, prompt })
     if (!proposal) return fail(502, 'no_proposal')
     return new Response(JSON.stringify(proposal), { headers })
@@ -309,7 +357,9 @@ async function callTool(opts: {
 }): Promise<Record<string, unknown> | null> {
   const { deepseekKey, anthropicKey, openrouterKey, system, tool, prompt } = opts
   if (deepseekKey) {
+    console.log('scout_provider_try', JSON.stringify({ provider: 'deepseek', tool: tool.name }))
     const out = await callOpenAiCompatibleTool({
+      provider: 'deepseek',
       url: 'https://api.deepseek.com/chat/completions',
       key: deepseekKey,
       model: DEEPSEEK_MODEL,
@@ -320,7 +370,9 @@ async function callTool(opts: {
     if (out) return out
   }
   if (openrouterKey) {
+    console.log('scout_provider_try', JSON.stringify({ provider: 'openrouter', tool: tool.name }))
     const out = await callOpenAiCompatibleTool({
+      provider: 'openrouter',
       url: 'https://openrouter.ai/api/v1/chat/completions',
       key: openrouterKey,
       model: OPENROUTER_MODEL,
@@ -331,6 +383,7 @@ async function callTool(opts: {
     if (out) return out
   }
   if (anthropicKey) {
+    console.log('scout_provider_try', JSON.stringify({ provider: 'anthropic', tool: tool.name }))
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -347,7 +400,10 @@ async function callTool(opts: {
         messages: [{ role: 'user', content: prompt }],
       }),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.error('scout_provider_http', JSON.stringify({ provider: 'anthropic', status: res.status }))
+      return null
+    }
     const body = await res.json()
     const toolUse = body.content?.find((c: { type: string }) => c.type === 'tool_use')
     return (toolUse?.input as Record<string, unknown>) ?? null
@@ -356,6 +412,7 @@ async function callTool(opts: {
 }
 
 async function callOpenAiCompatibleTool(opts: {
+  provider: string
   url: string
   key: string
   model: string
@@ -363,27 +420,45 @@ async function callOpenAiCompatibleTool(opts: {
   tool: { name: string; description: string; input_schema: object }
   prompt: string
 }): Promise<Record<string, unknown> | null> {
-  const { url, key, model, system, tool, prompt } = opts
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({
-      model,
-      max_tokens: 1500,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: prompt },
-      ],
-      tools: [{ type: 'function', function: { name: tool.name, description: tool.description, parameters: tool.input_schema } }],
-      tool_choice: { type: 'function', function: { name: tool.name } },
-    }),
-  })
-  if (!res.ok) return null
+  const { provider, url, key, model, system, tool, prompt } = opts
+  const controller = new AbortController()
+  const started = Date.now()
+  const timeout = setTimeout(() => controller.abort(), 18000)
+  let res: Response
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${key}`, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        max_tokens: 1500,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: prompt },
+        ],
+        tools: [{ type: 'function', function: { name: tool.name, description: tool.description, parameters: tool.input_schema } }],
+        tool_choice: { type: 'function', function: { name: tool.name } },
+      }),
+    })
+  } catch (e) {
+    console.error('scout_provider_error', JSON.stringify({ provider, model, error: e instanceof Error ? e.name : String(e) }))
+    return null
+  } finally {
+    clearTimeout(timeout)
+  }
+  if (!res.ok) {
+    console.error('scout_provider_http', JSON.stringify({ provider, model, status: res.status }))
+    return null
+  }
   const body = await res.json()
   const args = body.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments
   try {
-    return typeof args === 'string' ? JSON.parse(args) : (args ?? null)
+    const parsed = typeof args === 'string' ? JSON.parse(args) : (args ?? null)
+    console.log('scout_provider_ok', JSON.stringify({ provider, model, ms: Date.now() - started }))
+    return parsed
   } catch {
+    console.error('scout_provider_parse', JSON.stringify({ provider, model }))
     return null
   }
 }
